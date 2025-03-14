@@ -9,14 +9,25 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@polkadot/api": "^15.8.1",
+    "@polkadot/extension-dapp": "^0.46.9",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-slot": "^1.1.2",
     "@subwallet-connect/core": "^1.0.8",
     "@subwallet-connect/injected-wallets": "^1.0.8",
     "@subwallet-connect/subwallet": "^1.0.8",
     "@subwallet-connect/subwallet-polkadot": "^1.0.8",
+    "avail-js-sdk": "^0.4.0",
     "big.js": "^6.2.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.479.0",
     "next": "15.2.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.0.2",
+    "tailwindcss-animate": "^1.0.7",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
