@@ -10,9 +10,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Info } from 'lucide-react';
 
 import { ActionRecord, useActionsStore } from '@/stores/actionStore';
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@radix-ui/react-tooltip';
+import { parseError } from '@/lib/error';
 
 export function ActionHistory() {
   const { actions } = useActionsStore();
@@ -51,7 +58,7 @@ export function ActionHistory() {
   };
 
   // Render status with icon
-  const renderStatus = (status: string) => {
+  const renderStatus = (status: string, error: string | undefined) => {
     switch (status) {
       case 'success':
         return (
@@ -79,6 +86,18 @@ export function ActionHistory() {
           <div className='flex items-center text-red-500 font-medium'>
             <XCircle className='mr-2 h-5 w-5' />
             FAILED
+            {error && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className='ml-2 h-4 w-4 cursor-pointer text-red-500' />
+                  </TooltipTrigger>
+                  <TooltipContent className='bg-secondary border rounded-md border-white/10 p-2 text-white max-w-xs'>
+                    <p className='text-sm'>{parseError(error)}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         );
 
@@ -176,7 +195,9 @@ export function ActionHistory() {
                   <TableCell className='text-white'>
                     {formatTime(action.timestamp)}
                   </TableCell>
-                  <TableCell>{renderStatus(action.status)}</TableCell>
+                  <TableCell>
+                    {renderStatus(action.status, action?.error)}
+                  </TableCell>
                 </TableRow>
               ))
             )}

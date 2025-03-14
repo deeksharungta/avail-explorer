@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Avail Explorer
 
-## Getting Started
+Live demo: https://avail-explorer.vercel.app
 
-First, run the development server:
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **UI**: TailwindCSS with shadcn/ui components
+- **State Management**: Zustand
+- **Blockchain Integration**: Polkadot.js API, SubWallet Connect, Avail SDK
+- **Data Fetching**: TanStack Query (React Query)
+- **API Communication**: GraphQL with graphql-request
+
+## Prerequisites
+
+- Node.js 18.x or later
+- Yarn or npm
+- An Avail-compatible wallet (SubWallet, Polkadot.js, etc.)
+- Access to Avail Turing Testnet
+
+## Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/deeksharungta/avail-explorer.git
+cd avail-explorer
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Set up environment variables:
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+NEXT_PUBLIC_APP_ID=your-avail-app-id
+```
+
+4. Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                 # Next.js App Router pages
+│   ├── api/             # API routes
+│   ├── explorer/        # Explorer pages
+│   └── layout.tsx       # Root layout
+├── components/          # React components
+│   ├── action/          # Action-related components
+│   ├── explorer/        # Explorer-related components
+│   ├── layout/          # Layout components
+│   ├── transaction/     # Transaction components
+│   ├── ui/              # UI components (shadcn/ui)
+│   └── wallet/          # Wallet components
+├── hooks/               # Custom React hooks
+│   ├── account/         # Account-related hooks
+│   ├── stats/           # Statistics hooks
+│   └── transactions/    # Transaction hooks
+├── lib/                 # Utility functions and services
+│   ├── api/             # API helper functions
+│   ├── config/          # Configuration files
+│   ├── network/         # Network connection utilities
+│   ├── services/        # Service utilities (GraphQL, actions)
+│   ├── utils.ts         # General utility functions
+│   ├── validators/      # Form validators
+│   └── wallet/          # Wallet utilities
+├── stores/              # Zustand store definitions
+└── types/               # TypeScript type definitions
+```
 
-## Learn More
+## Usage
 
-To learn more about Next.js, take a look at the following resources:
+### Connecting to a Wallet
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Click on the "Connect Wallet" button in the top-right corner
+2. Select your Substrate-compatible wallet
+3. Approve the connection request in your wallet extension
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Transferring AVAIL Tokens
 
-## Deploy on Vercel
+1. Ensure your wallet is connected
+2. On the Actions page, select "Transfer" from the dropdown
+3. Enter the recipient's address and the amount to transfer
+4. Click "Submit" and confirm the transaction in your wallet
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Submitting Data to Avail
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Ensure your wallet is connected
+2. On the Actions page, select "Data Submission" from the dropdown
+3. Enter the data you want to submit
+4. Click "Submit" and confirm the transaction in your wallet
+
+### Viewing Transaction History
+
+The "Recent Actions" section on the main page shows your transaction history, including status, type, and timestamp.
