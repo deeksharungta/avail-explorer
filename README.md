@@ -41,6 +41,7 @@ Create a `.env` file in the root directory with the following variables:
 NEXT_PUBLIC_APP_ID=your-avail-app-id
 NEXT_PUBLIC_AVAIL_TURING_RPC_HTTP=avail-rpc-http-endpoint
 NEXT_PUBLIC_AVAIL_TURING_RPC_WS=avail-rpc-ws-endpoint
+NEXT_PUBLIC_AVAIL_INDEXER_ENDPOINT=avail-indexer-endpoint
 ```
 
 4. Run the development server:
