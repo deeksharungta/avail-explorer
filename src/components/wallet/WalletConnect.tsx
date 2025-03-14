@@ -8,8 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, LogOut } from 'lucide-react';
-import { formatAddress } from '@/lib/utils';
+import { ChevronDown, Copy, LogOut } from 'lucide-react';
+import { copyToClipboard, formatAddress } from '@/lib/utils';
 
 export default function WalletConnect() {
   const {
@@ -40,6 +40,16 @@ export default function WalletConnect() {
             <ChevronDown className='h-4 w-4 ml-2' />
           </DropdownMenuTrigger>
           <DropdownMenuContent className='w-56 bg-black border border-gray-800 p-0 rounded-lg text-white'>
+            <DropdownMenuItem
+              onClick={() => {
+                copyToClipboard(account?.address || '');
+              }}
+              className='text-white hover:text-blue-300 hover:bg-gray-900 cursor-pointer px-5 py-3 flex items-center text-md justify-between w-full focus:bg-transparent focus:text-white'
+            >
+              <span className='text-white'>Copy Address</span>
+
+              <Copy className='h-4 w-4 text-white' />
+            </DropdownMenuItem>
             {balance && (
               <div className='px-5 py-3 border-b border-gray-800 flex items-center justify-between'>
                 <span className='text-gray-400 font-medium'>Balance</span>
