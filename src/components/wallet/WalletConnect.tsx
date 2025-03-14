@@ -53,7 +53,7 @@ export default function WalletConnect() {
             {balance && (
               <div className='px-5 py-3 border-b border-gray-800 flex items-center justify-between'>
                 <span className='text-gray-400 font-medium'>Balance</span>
-                <span className='text-white text-lg font-normal'>
+                <span className='text-white text-sm font-normal whitespace-nowrap'>
                   {formatBalance(balance.free)} AVL
                 </span>
               </div>
