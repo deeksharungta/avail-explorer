@@ -10,95 +10,139 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useActions } from '@/hooks/useActions';
-import { formatDistance } from 'date-fns';
-import Link from 'next/link';
-import { ExternalLink } from 'lucide-react';
+import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { ActionRecord, useActions } from '@/hooks/useActions';
 
 export function ActionHistory() {
   const { actions } = useActions();
-  console.log({ actions });
 
   // Truncate long addresses or data
   const truncate = (str: string, length = 10) => {
     return str.length > length ? `${str.slice(0, 6)}...${str.slice(-4)}` : str;
   };
 
-  // Render status badge
-  const renderStatusBadge = (status: string) => {
+  // Format timestamp to show time
+  const formatTime = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  // Render transaction type with badge
+  const renderTypeWithBadge = (type: string) => {
+    return (
+      <div>
+        {type === 'transfer' ? (
+          <Badge className='bg-blue-950 text-white px-3 py-1 rounded-full'>
+            TRANSFER
+          </Badge>
+        ) : (
+          <Badge className='bg-purple-900 text-white px-3 py-1 rounded-full'>
+            DATA SUBMIT
+          </Badge>
+        )}
+      </div>
+    );
+  };
+
+  // Render status with icon
+  const renderStatus = (status: string) => {
     switch (status) {
       case 'success':
-        return <Badge>Completed</Badge>;
+        return (
+          <div className='flex items-center text-green-500 font-medium'>
+            <CheckCircle className='mr-2 h-5 w-5' />
+            COMPLETED
+          </div>
+        );
       case 'pending':
-        return <Badge>Pending</Badge>;
+        return (
+          <div className='flex items-center text-yellow-500 font-medium'>
+            <Clock className='mr-2 h-5 w-5' />
+            PENDING
+          </div>
+        );
       case 'failed':
-        return <Badge variant='destructive'>Failed</Badge>;
+        return (
+          <div className='flex items-center text-red-500 font-medium'>
+            <XCircle className='mr-2 h-5 w-5' />
+            FAILED
+          </div>
+        );
       default:
-        return <Badge variant='secondary'>{status}</Badge>;
+        return <div>{status}</div>;
     }
   };
 
-  // Generate explorer link
-  const getExplorerLink = (txHash: string) => {
-    return `https://avail-turing.subscan.io/extrinsic/${txHash}`;
+  // Render value based on action type
+  const renderValue = (action: ActionRecord) => {
+    if (action.type === 'transfer') {
+      return (
+        <div>
+          <div className='text-lg font-medium text-white'>
+            {action.details.amount}
+          </div>
+          <div className='text-sm text-gray-400'>
+            To: {truncate(action.details.recipient || '', 15)}
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className='text-white'>
+          {truncate(action.details.data || '', 20)}
+        </div>
+      );
+    }
   };
 
   return (
-    <div className='w-full max-w-4xl mx-auto'>
-      <h2 className='text-xl font-semibold mb-4'>Recent Actions</h2>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Type</TableHead>
-            <TableHead>Details</TableHead>
-            <TableHead>Time</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {actions.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className='text-center'>
-                No recent actions
-              </TableCell>
+    <div className='w-full mx-auto'>
+      <h2 className='text-2xl font-bold mb-6 text-white'>Recent Actions</h2>
+      <div className='rounded-md border border-white/10 overflow-hidden'>
+        <Table>
+          <TableHeader>
+            <TableRow className='border-b border-white/10 bg-secondary hover:bg-secondary'>
+              <TableHead className='text-white/80 font-medium'>ID</TableHead>
+              <TableHead className='text-white/80 font-medium'>TYPE</TableHead>
+              <TableHead className='text-white/80 font-medium'>VALUE</TableHead>
+              <TableHead className='text-white/80 font-medium'>TIME</TableHead>
+              <TableHead className='text-white/80 font-medium'>
+                STATUS
+              </TableHead>
             </TableRow>
-          ) : (
-            actions.map((action) => (
-              <TableRow key={action.id}>
-                <TableCell>
-                  {action.type === 'transfer' ? 'Transfer' : 'Data Submit'}
-                </TableCell>
-                <TableCell>
-                  {action.type === 'transfer'
-                    ? `${action.details.amount} AVAIL to ${truncate(
-                        action.details.recipient || ''
-                      )}`
-                    : truncate(action.details.data || '', 20)}
-                </TableCell>
-                <TableCell>
-                  {formatDistance(action.timestamp, new Date(), {
-                    addSuffix: true,
-                  })}
-                </TableCell>
-                <TableCell>{renderStatusBadge(action.status)}</TableCell>
-                <TableCell>
-                  {action.transactionHash && (
-                    <Link
-                      href={getExplorerLink(action.transactionHash)}
-                      target='_blank'
-                      className='hover:bg-gray-100 p-2 rounded-full inline-flex items-center'
-                      title='View in Explorer'
-                    >
-                      <ExternalLink size={16} />
-                    </Link>
-                  )}
+          </TableHeader>
+          <TableBody>
+            {actions.length === 0 ? (
+              <TableRow className='border-b border-white/10 hover:bg-transparent py-6'>
+                <TableCell colSpan={5} className='text-center text-white/80 '>
+                  No recent actions
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              actions.map((action) => (
+                <TableRow
+                  key={action.id}
+                  className='border-b border-white/10 hover:bg-secondary bg-black'
+                >
+                  <TableCell className='font-mono text-sm text-white'>
+                    {truncate(action.id || action.transactionHash || '0x', 15)}
+                  </TableCell>
+                  <TableCell>{renderTypeWithBadge(action.type)}</TableCell>
+                  <TableCell>{renderValue(action)}</TableCell>
+                  <TableCell className='text-white'>
+                    {formatTime(action.timestamp)}
+                  </TableCell>
+                  <TableCell>{renderStatus(action.status)}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

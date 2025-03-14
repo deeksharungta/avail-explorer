@@ -10,10 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useWalletStore } from '@/stores/walletStore';
 import { useActions } from '@/hooks/useActions';
-import { Textarea } from '@/components/ui/textarea';
 import { ActionConfirmModal } from './ActionConfirmModal';
 import WalletConnect from '../wallet/WalletConnect';
 
@@ -104,34 +102,38 @@ export function ActionForm() {
     if (actionType === 'transfer') {
       return (
         <>
-          <div className='grid w-full max-w-sm items-center gap-1.5'>
-            <Label htmlFor='recipient'>Recipient Address</Label>
+          <div className='flex-1 mr-2'>
             <Input
               type='text'
               id='recipient'
               placeholder='Enter recipient address'
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              className={formErrors.recipient ? 'border-red-500' : ''}
+              className={`bg-secondary border-white/20 focus:border-white/20 text-white h-12 px-4 ${
+                formErrors.recipient ? 'border-red-500' : ''
+              }`}
             />
             {formErrors.recipient && (
-              <p className='text-red-500 text-sm'>{formErrors.recipient}</p>
+              <p className='text-red-500 text-xs mt-1'>
+                {formErrors.recipient}
+              </p>
             )}
           </div>
-          <div className='grid w-full max-w-sm items-center gap-1.5'>
-            <Label htmlFor='amount'>Amount (AVAIL)</Label>
+          <div className='w-32 mr-2'>
             <Input
               type='number'
               id='amount'
-              placeholder='Enter amount'
+              placeholder='Amount'
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               step='0.000001'
               min='0'
-              className={formErrors.amount ? 'border-red-500' : ''}
+              className={`bg-secondary border-white/20 focus:border-white/20 text-white h-12 px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                formErrors.amount ? 'border-red-500' : ''
+              }`}
             />
             {formErrors.amount && (
-              <p className='text-red-500 text-sm'>{formErrors.amount}</p>
+              <p className='text-red-500 text-xs mt-1'>{formErrors.amount}</p>
             )}
           </div>
         </>
@@ -139,37 +141,47 @@ export function ActionForm() {
     }
 
     return (
-      <div className='grid w-full max-w-sm items-center gap-1.5'>
-        <Label htmlFor='data'>Data to Submit</Label>
-        <Textarea
+      <div className='flex-1 mr-2'>
+        <Input
           id='data'
           placeholder='Enter data to submit'
           value={dataToSubmit}
           onChange={(e) => setDataToSubmit(e.target.value)}
-          className={formErrors.data ? 'border-red-500' : ''}
+          className={`bg-secondary border-white/20 focus:border-white/20 text-white h-12 px-4 ${
+            formErrors.data ? 'border-red-500' : ''
+          }`}
         />
         {formErrors.data && (
-          <p className='text-red-500 text-sm'>{formErrors.data}</p>
+          <p className='text-red-500 text-xs mt-1'>{formErrors.data}</p>
         )}
       </div>
     );
   };
 
   return (
-    <div className='w-full max-w-md mx-auto space-y-4'>
-      <form onSubmit={handleSubmit} className='space-y-4'>
-        <div className='grid w-full max-w-sm items-center gap-1.5'>
-          <Label>Action Type</Label>
+    <div className='w-full mx-auto max-w-5xl'>
+      <form onSubmit={handleSubmit} className='flex items-center'>
+        <div className='mr-2 '>
           <Select
             value={actionType}
             onValueChange={(value: ActionType) => setActionType(value)}
           >
-            <SelectTrigger>
-              <SelectValue placeholder='Select action type' />
+            <SelectTrigger className='bg-secondary border-white/20 text-white hover:bg-muted focus:ring-white focus:ring-offset-0 transition-all duration-200 px-4 py-5'>
+              <SelectValue placeholder='Select type' />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='transfer'>Transfer</SelectItem>
-              <SelectItem value='data-submit'>Data Submission</SelectItem>
+            <SelectContent className='bg-black border border-gray-800 text-white'>
+              <SelectItem
+                value='transfer'
+                className='focus:bg-muted focus:text-white'
+              >
+                Transfer
+              </SelectItem>
+              <SelectItem
+                value='data-submit'
+                className='focus:bg-muted focus:text-white'
+              >
+                Data Submission
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -177,16 +189,20 @@ export function ActionForm() {
         {renderTypeSpecificInputs()}
 
         {account ? (
-          <Button type='submit' className='w-full' disabled={isProcessing}>
+          <Button
+            type='submit'
+            className='bg-secondary text-white hover:bg-muted border-white/20 border rounded-md font-normal transition-all duration-200 h-12 px-6 text-base'
+            disabled={isProcessing}
+          >
             {isProcessing ? 'Processing...' : 'Submit'}
           </Button>
         ) : (
-          <WalletConnect />
+          <div>
+            <WalletConnect />
+          </div>
         )}
 
-        {error && (
-          <div className='text-red-500 text-sm text-center'>{error}</div>
-        )}
+        {error && <div className='text-red-500 text-xs ml-2'>{error}</div>}
       </form>
 
       <ActionConfirmModal
