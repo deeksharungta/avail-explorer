@@ -1,5 +1,5 @@
+import { getAccountTransactions } from '@/lib/api/accounts';
 import { NextRequest, NextResponse } from 'next/server';
-import { getAccountTransactions } from '@/lib/services/api/accounts';
 
 export async function GET(
   request: NextRequest,
@@ -21,7 +21,10 @@ export async function GET(
     return NextResponse.json({ data: transactions }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch account transactions' },
+      {
+        error: 'Failed to fetch account transactions',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

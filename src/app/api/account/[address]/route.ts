@@ -12,7 +12,10 @@ export async function GET(
     return NextResponse.json({ data: account }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch account details' },
+      {
+        error: 'Failed to fetch account details',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
