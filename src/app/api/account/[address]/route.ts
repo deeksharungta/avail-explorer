@@ -3,10 +3,10 @@ import { getAccountById } from '@/lib/api/accounts';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const { address } = params;
+    const { address } = await params;
     const account = await getAccountById(address);
 
     return NextResponse.json({ data: account }, { status: 200 });

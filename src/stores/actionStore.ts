@@ -407,7 +407,7 @@ export const useInitActionsStore = () => {
     } else if (!address && currentWalletAddress) {
       loadWalletActions('');
     }
-  }, [address, loadWalletActions]);
+  }, [address, loadWalletActions, currentWalletAddress]);
 };
 
 // Create a hook to manually load actions
