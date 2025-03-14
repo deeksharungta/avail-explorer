@@ -14,9 +14,9 @@ Live demo: https://avail-explorer.vercel.app
 ## Prerequisites
 
 - Node.js 18.x or later
-- Yarn or npm
-- An Avail-compatible wallet (SubWallet, Polkadot.js, etc.)
-- Access to Avail Turing Testnet
+- npm
+- Avail-compatible wallet (SubWallet, Polkadot.js, etc.)
+- Access to Avail Turing Testnet RPC
 
 ## Installation
 
@@ -39,6 +39,8 @@ Create a `.env` file in the root directory with the following variables:
 
 ```
 NEXT_PUBLIC_APP_ID=your-avail-app-id
+NEXT_PUBLIC_AVAIL_TURING_RPC_HTTP=avail-rpc-http-endpoint
+NEXT_PUBLIC_AVAIL_TURING_RPC_WS=avail-rpc-ws-endpoint
 ```
 
 4. Run the development server:
@@ -71,7 +73,6 @@ src/
 ├── lib/                 # Utility functions and services
 │   ├── api/             # API helper functions
 │   ├── config/          # Configuration files
-│   ├── network/         # Network connection utilities
 │   ├── services/        # Service utilities (GraphQL, actions)
 │   ├── utils.ts         # General utility functions
 │   ├── validators/      # Form validators
