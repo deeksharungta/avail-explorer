@@ -7,8 +7,6 @@ export async function GET(request: NextRequest) {
     const first = parseInt(searchParams.get('first') || '10');
     const after = searchParams.get('after') || undefined;
 
-    console.log('hee');
-
     const transactions = await getLatestTransactions({
       first,
       after,

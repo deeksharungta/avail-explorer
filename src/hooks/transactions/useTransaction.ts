@@ -1,7 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
+import { ErrorInfo } from '@/components/transaction/ErrorCard';
+import { Extrinsic } from '@/types/graphql';
+import { useQuery, UseQueryResult } from '@tanstack/react-query';
+
+export interface TransactionResult {
+  extrinsic: Extrinsic;
+  events: Event[];
+  error?: ErrorInfo;
+}
 
 // Fetch transaction by hash
-const fetchTransactionByHash = async (hash: string) => {
+const fetchTransactionByHash = async (
+  hash: string
+): Promise<TransactionResult> => {
   const response = await fetch(`/api/transactions/${hash}`);
   if (!response.ok) {
     const errorData = await response.json();
@@ -13,7 +23,9 @@ const fetchTransactionByHash = async (hash: string) => {
 };
 
 // Transaction details hook
-export function useTransaction(hash: string | undefined) {
+export function useTransaction(
+  hash: string | undefined
+): UseQueryResult<TransactionResult, Error> {
   return useQuery({
     queryKey: ['transaction', hash],
     queryFn: () => fetchTransactionByHash(hash as string),

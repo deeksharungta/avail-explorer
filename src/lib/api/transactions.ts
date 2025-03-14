@@ -17,7 +17,7 @@ interface GetTransactionsParams {
 
 // Fetch the latest transactions with pagination
 export async function getLatestTransactions({
-  first,
+  first = 10,
   after,
 }: GetTransactionsParams) {
   try {
