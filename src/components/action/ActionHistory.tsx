@@ -10,14 +10,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
-import { ActionRecord, useActions } from '@/hooks/useActions';
+import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+
+import { ActionRecord, useActionsStore } from '@/stores/actionStore';
 
 export function ActionHistory() {
-  const { actions } = useActions();
+  const { actions } = useActionsStore();
 
   // Truncate long addresses or data
   const truncate = (str: string, length = 10) => {
+    if (!str) return '';
     return str.length > length ? `${str.slice(0, 6)}...${str.slice(-4)}` : str;
   };
 
@@ -61,8 +63,15 @@ export function ActionHistory() {
       case 'pending':
         return (
           <div className='flex items-center text-yellow-500 font-medium'>
-            <Clock className='mr-2 h-5 w-5' />
-            PENDING
+            <Loader2 className='mr-2 h-5 w-5 animate-spin' />
+            PROCESSING
+          </div>
+        );
+      case 'processing':
+        return (
+          <div className='flex items-center text-yellow-500 font-medium'>
+            <Loader2 className='mr-2 h-5 w-5 animate-spin' />
+            PROCESSING
           </div>
         );
       case 'failed':
@@ -72,6 +81,7 @@ export function ActionHistory() {
             FAILED
           </div>
         );
+
       default:
         return <div>{status}</div>;
     }
@@ -97,6 +107,26 @@ export function ActionHistory() {
         </div>
       );
     }
+  };
+
+  const getExplorerLink = (hash: string) => {
+    return `https://avail-turing.subscan.io/extrinsic/${hash}`;
+  };
+
+  // Render ID with pending indicator if needed
+  const renderID = (action: ActionRecord) => {
+    const isPending = action.status === 'pending';
+    const id = action.transactionHash || action.id || '0x';
+
+    return (
+      <div className='font-mono text-sm text-white flex items-center'>
+        {isPending && action.id.startsWith('pending-') ? (
+          <span className='italic text-yellow-400'>Processing...</span>
+        ) : (
+          truncate(id, 15)
+        )}
+      </div>
+    );
   };
 
   return (
@@ -126,11 +156,21 @@ export function ActionHistory() {
               actions.map((action) => (
                 <TableRow
                   key={action.id}
-                  className='border-b border-white/10 hover:bg-secondary bg-black'
+                  className={`border-b border-white/10 hover:bg-secondary cursor-pointer ${
+                    action.status === 'pending' ? 'bg-secondary/20' : 'bg-black'
+                  }`}
+                  onClick={
+                    action.transactionHash
+                      ? () => {
+                          window.open(
+                            getExplorerLink(action.transactionHash || ''),
+                            '_blank'
+                          );
+                        }
+                      : undefined
+                  }
                 >
-                  <TableCell className='font-mono text-sm text-white'>
-                    {truncate(action.id || action.transactionHash || '0x', 15)}
-                  </TableCell>
+                  <TableCell>{renderID(action)}</TableCell>
                   <TableCell>{renderTypeWithBadge(action.type)}</TableCell>
                   <TableCell>{renderValue(action)}</TableCell>
                   <TableCell className='text-white'>

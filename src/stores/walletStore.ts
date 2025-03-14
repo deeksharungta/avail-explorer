@@ -8,6 +8,8 @@ import {
   formatBalance as formatBalanceUtil,
 } from '@/lib/network/avail-connection';
 import { Account } from '@subwallet-connect/core/dist/types';
+import { useEffect } from 'react';
+import { useActionsStore } from './actionStore';
 
 interface WalletState {
   wallet: WalletInterface | null;
@@ -41,15 +43,24 @@ export const useWalletStore = create<WalletState>((set, get) => ({
       const wallets = await onboard.connectWallet();
 
       if (!wallets || wallets.length === 0) {
-        throw new Error('No wallet connected');
+        set({
+          isLoading: false,
+          error: 'No wallet connected',
+          status: 'Connection failed',
+        });
+        return;
       }
 
       const connectedWallet = wallets[0];
 
       if (connectedWallet.type !== 'substrate') {
-        throw new Error(
-          'Please connect a Substrate compatible wallet for Avail Network'
-        );
+        set({
+          isLoading: false,
+          error:
+            'Please connect a Substrate compatible wallet for Avail Network',
+          status: 'Connection failed',
+        });
+        return;
       }
 
       // Connect to Avail network
@@ -69,6 +80,12 @@ export const useWalletStore = create<WalletState>((set, get) => ({
         isLoading: false,
         status: 'Connected to Avail Network',
       });
+
+      // Ensure actions are loaded for this account
+      if (connectedAccount?.address) {
+        const { loadWalletActions } = useActionsStore.getState();
+        loadWalletActions(connectedAccount.address);
+      }
     } catch (error) {
       console.error('Error connecting wallet:', error);
       set({
@@ -86,6 +103,10 @@ export const useWalletStore = create<WalletState>((set, get) => ({
       api.disconnect();
     }
 
+    // Clear actions when wallet disconnects
+    const { loadWalletActions } = useActionsStore.getState();
+    loadWalletActions('');
+
     set({
       wallet: null,
       account: null,
@@ -98,3 +119,20 @@ export const useWalletStore = create<WalletState>((set, get) => ({
 
   formatBalance: (balance: string) => formatBalanceUtil(balance),
 }));
+
+export const useWalletInit = () => {
+  const { account } = useWalletStore();
+  const { loadWalletActions } = useActionsStore();
+
+  // Load actions whenever this component mounts and account is available
+  useEffect(() => {
+    if (account?.address) {
+      // Use a small timeout to ensure this runs after wallet store is updated
+      setTimeout(() => {
+        loadWalletActions(account.address);
+      }, 100);
+    }
+  }, [account, loadWalletActions]);
+
+  return null;
+};
