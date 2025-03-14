@@ -1,5 +1,9 @@
-// Avail Indexer GraphQL API endpoint
-export const AVAIL_INDEXER_ENDPOINT = 'https://turing-indexer.avail.so/';
+// Avail Turing Indexer GraphQL API endpoint
+export const AVAIL_INDEXER_ENDPOINT =
+  process.env.NEXT_PUBLIC_AVAIL_INDEXER_ENDPOINT!;
 
-//Avail blockchain node WebSocket endpoint
-export const AVAIL_NODE_ENDPOINT = 'wss://turing-rpc.avail.so/ws';
+//Avail Turing HTTP RPC
+export const AVAIL_HTTP_RPC = process.env.NEXT_PUBLIC_AVAIL_TURING_RPC_HTTP!;
+
+//Avail Turing WS RPC
+export const AVAIL_WS_RPC = process.env.NEXT_PUBLIC_AVAIL_TURING_RPC_WS!;

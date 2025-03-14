@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { useWallet } from '@/hooks/useWallet';
-import { formatBalance } from '@/lib/network/avail-connection';
+import { formatBalance } from '@/lib/wallet/avail-connection';
 import {
   DropdownMenu,
   DropdownMenuContent,

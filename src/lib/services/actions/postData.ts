@@ -4,6 +4,7 @@ import { Account } from '@subwallet-connect/core/dist/types';
 import { APP_ID } from '@/lib/config/constants';
 import { WalletInterface } from '@/types/wallet';
 import { useActionsStore } from '@/stores/actionStore';
+import { AVAIL_WS_RPC } from '@/lib/config/endpoints';
 
 export interface DataPostingResult {
   txHash?: string;
@@ -30,7 +31,7 @@ export const postData = async (
   }
 
   try {
-    const sdk = await SDK.New('wss://turing-rpc.avail.so/ws');
+    const sdk = await SDK.New(AVAIL_WS_RPC);
     const transaction = sdk.tx.dataAvailability.submitData(data);
 
     return new Promise<DataPostingResult>((resolve) => {

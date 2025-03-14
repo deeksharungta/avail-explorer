@@ -1,13 +1,13 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { WalletBalance } from '@/types/wallet';
-import { AVAIL_NODE_ENDPOINT } from '../config/endpoints';
 import Big from 'big.js';
 import { AccountInfo } from 'avail-js-sdk/sdk/account';
+import { AVAIL_WS_RPC } from '../config/endpoints';
 
 export const connectToAvail = async (): Promise<{
   api: ApiPromise;
 }> => {
-  const provider = new WsProvider(AVAIL_NODE_ENDPOINT);
+  const provider = new WsProvider(AVAIL_WS_RPC);
 
   const api = await ApiPromise.create({ provider });
   await api.isReady;

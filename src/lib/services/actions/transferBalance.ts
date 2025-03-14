@@ -3,6 +3,7 @@ import { SignerOptions } from '@polkadot/api/types';
 import { BN, SDK } from 'avail-js-sdk';
 import { WalletInterface } from '@/types/wallet';
 import { useActionsStore } from '@/stores/actionStore';
+import { AVAIL_WS_RPC } from '@/lib/config/endpoints';
 
 export interface TransactionResult {
   txHash: string;
@@ -23,7 +24,7 @@ export async function performBalanceTransfer(
   const { updateActionStatus } = useActionsStore.getState();
 
   // Create SDK instance
-  const sdk = await SDK.New('wss://turing-rpc.avail.so/ws');
+  const sdk = await SDK.New(AVAIL_WS_RPC);
 
   const transaction = sdk.tx.balances.transferKeepAlive(
     destinationAddress,

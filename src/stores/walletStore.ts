@@ -6,7 +6,7 @@ import {
   connectToAvail,
   fetchBalance,
   formatBalance as formatBalanceUtil,
-} from '@/lib/network/avail-connection';
+} from '@/lib/wallet/avail-connection';
 import { Account } from '@subwallet-connect/core/dist/types';
 import { useEffect } from 'react';
 import { useActionsStore } from './actionStore';
