@@ -26,11 +26,10 @@ export const postData = async (
 
   const sdk = await SDK.New('wss://turing-rpc.avail.so/ws');
 
+  const transaction = sdk.tx.dataAvailability.submitData(data);
   return new Promise((resolve, reject) => {
     try {
-      const transaction = sdk.tx.dataAvailability.submitData(data);
-
-      const unsubscribe = transaction.tx
+      transaction.tx
         .signAndSend(
           account.address,
           { signer: wallet.signer, app_id: APP_ID } as Partial<SignerOptions>,
@@ -41,10 +40,6 @@ export const postData = async (
                 blockHash: status.asInBlock.toHex(),
                 status: 'success',
               });
-
-              // Always unsubscribe
-              //@ts-expect-error this
-              unsubscribe();
             } else if (status.isFinalized) {
               console.log('Transaction finalized:', status.asFinalized.toHex());
             }

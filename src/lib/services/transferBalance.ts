@@ -18,14 +18,14 @@ export async function performBalanceTransfer(
   // Create SDK instance
   const sdk = await SDK.New('wss://turing-rpc.avail.so/ws');
 
+  const transaction = sdk.tx.balances.transferKeepAlive(
+    destinationAddress,
+    amount
+  );
+
   return new Promise((resolve, reject) => {
     try {
-      const transaction = sdk.tx.balances.transferKeepAlive(
-        destinationAddress,
-        amount
-      );
-
-      const unsubscribe = transaction.tx
+      transaction.tx
         .signAndSend(
           account.address,
           {
@@ -54,10 +54,6 @@ export async function performBalanceTransfer(
                   events: processedEvents,
                 });
               }
-
-              // Always unsubscribe
-              //@ts-expect-error this
-              unsubscribe();
             } else if (status.isFinalized) {
               console.log('Transaction finalized:', status.asFinalized.toHex());
             }
@@ -72,5 +68,23 @@ export async function performBalanceTransfer(
 
 // Convert token amount to smallest unit
 export function convertToSmallestUnit(amount: string): BN {
-  return new BN(amount).mul(new BN('1000000000000000000'));
+  try {
+    const cleanAmount = amount.trim().replace(/,/g, '');
+
+    // Validate that the string is a valid number
+    if (isNaN(Number(cleanAmount))) {
+      throw new Error('Invalid number format');
+    }
+
+    const decimalPlaces = 18;
+
+    const amountBN = new BN(
+      (parseFloat(cleanAmount) * Math.pow(10, decimalPlaces)).toFixed(0)
+    );
+
+    return amountBN;
+  } catch (error) {
+    console.error('Error converting to smallest unit:', error);
+    throw new Error(`Unable to convert amount: ${amount}`);
+  }
 }
