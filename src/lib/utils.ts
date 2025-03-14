@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { toast } from 'sonner';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -13,9 +14,25 @@ export const formatAddress = (address: string) => {
   )}`;
 };
 
-export const copyToClipboard = (text: string) => {
-  navigator.clipboard.writeText(text);
-  // In a real app, you'd add a toast notification here
+// Copy text to clipboard
+export const copyToClipboard = (
+  text: string,
+  message = 'Copied to clipboard'
+) => {
+  navigator.clipboard.writeText(text).then(
+    () => {
+      toast.success(message, {
+        duration: 2000,
+        className: 'bg-secondary border-white/10 text-white',
+      });
+    },
+    (err) => {
+      console.error('Could not copy text: ', err);
+      toast.error('Could not copy to clipboard', {
+        duration: 3000,
+      });
+    }
+  );
 };
 
 //Format a date string
