@@ -5,8 +5,8 @@ import { useWalletStore } from '@/stores/walletStore';
 import {
   convertToSmallestUnit,
   performBalanceTransfer,
-} from '@/lib/services/transferBalance';
-import { postData } from '@/lib/services/postData';
+} from '@/lib/services/actions/transferBalance';
+import { postData } from '@/lib/services/actions/postData';
 import { validateTransfer } from '@/lib/validators/transferValidation';
 
 export interface ActionRecord {

@@ -1,7 +1,7 @@
 import { SDK } from 'avail-js-sdk';
 import { SignerOptions } from '@polkadot/api/types';
-import { APP_ID } from '../config/constants';
 import { Account } from '@subwallet-connect/core/dist/types';
+import { APP_ID } from '@/lib/config/constants';
 
 export interface DataPostingResult {
   txHash?: string;
