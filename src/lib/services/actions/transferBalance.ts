@@ -103,7 +103,6 @@ export async function performBalanceTransfer(
                 status: 'success',
                 error: undefined,
               });
-              console.log('Transaction finalized:', status.asFinalized.toHex());
             }
           }
         )
@@ -140,14 +139,23 @@ export async function performBalanceTransfer(
   });
 }
 
+export interface ConversionResult {
+  success: boolean;
+  value?: BN;
+  error?: string;
+}
+
 // Convert token amount to smallest unit
-export function convertToSmallestUnit(amount: string): BN {
+export function convertToSmallestUnit(amount: string): ConversionResult {
   try {
     const cleanAmount = amount.trim().replace(/,/g, '');
 
     // Validate that the string is a valid number
     if (isNaN(Number(cleanAmount))) {
-      throw new Error('Invalid number format');
+      return {
+        success: false,
+        error: 'Invalid number format',
+      };
     }
 
     const decimalPlaces = 18;
@@ -155,10 +163,15 @@ export function convertToSmallestUnit(amount: string): BN {
     const amountBN = new BN(
       (parseFloat(cleanAmount) * Math.pow(10, decimalPlaces)).toFixed(0)
     );
-
-    return amountBN;
+    return {
+      success: true,
+      value: amountBN,
+    };
   } catch (error) {
     console.error('Error converting to smallest unit:', error);
-    throw new Error(`Unable to convert amount: ${amount}`);
+    return {
+      success: false,
+      error: `Unable to convert amount: ${amount}`,
+    };
   }
 }

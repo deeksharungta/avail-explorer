@@ -417,7 +417,6 @@ export const useLoadActions = () => {
 
   return () => {
     if (account?.address) {
-      console.log(`Manual load triggered for ${account.address}`);
       loadWalletActions(account.address);
     }
   };

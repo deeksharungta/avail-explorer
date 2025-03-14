@@ -29,7 +29,9 @@ export const fetchBalance = async (
     };
   } catch (err) {
     console.error('Error fetching balance:', err);
-    throw err;
+    return {
+      free: '0',
+    };
   }
 };
 
