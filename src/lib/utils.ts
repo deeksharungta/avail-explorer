@@ -12,3 +12,13 @@ export const formatAddress = (address: string) => {
     address.length - 4
   )}`;
 };
+
+export const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleString();
+};
+
+export const copyToClipboard = (text: string) => {
+  navigator.clipboard.writeText(text);
+  // In a real app, you'd add a toast notification here
+};

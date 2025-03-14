@@ -12,7 +12,7 @@ export default function Header() {
             <Image src='/logo.svg' alt='Logo' width={100} height={100} />
           </div>
           <Link href='/'>Actions</Link>
-          <Link href='/transaction'>Transactions</Link>
+          <Link href='/explorer'>Explorer</Link>
         </div>
         <WalletConnect />
       </div>
