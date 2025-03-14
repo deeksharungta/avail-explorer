@@ -154,7 +154,7 @@ export default function TransactionTable({
             size='sm'
             onClick={prevPage}
             disabled={currentPage === 1}
-            className='flex items-center border-white/10 bg-secondary hover:bg-secondary/80 text-white'
+            className='flex items-center border-white/10 bg-secondary hover:bg-secondary/80 text-white hover:text-white cursor-pointer'
           >
             <ChevronLeft className='h-4 w-4 mr-1' />
             Previous
@@ -164,7 +164,7 @@ export default function TransactionTable({
             size='sm'
             onClick={nextPage}
             disabled={currentPage === totalPages}
-            className='flex items-center border-white/10 bg-secondary hover:bg-secondary/80 text-white'
+            className='flex items-center border-white/10 bg-secondary hover:bg-secondary/80 text-white hover:text-white cursor-pointer'
           >
             Next
             <ChevronRight className='h-4 w-4 ml-1' />

@@ -218,7 +218,7 @@ export function ActionForm() {
     if (actionType === 'transfer') {
       return (
         <>
-          <div className='flex-1 mr-2'>
+          <div className='flex-1 mr-2 relative'>
             <Input
               type='text'
               id='recipient'
@@ -231,10 +231,12 @@ export function ActionForm() {
               }`}
             />
             {touched.recipient && errors.recipient && (
-              <p className='text-red-500 text-xs mt-1'>{errors.recipient}</p>
+              <p className='text-red-500 text-xs absolute left-0 top-full mt-1'>
+                {errors.recipient}
+              </p>
             )}
           </div>
-          <div className='w-32 mr-2'>
+          <div className='w-32 mr-2 relative'>
             <Input
               type='number'
               id='amount'
@@ -249,7 +251,9 @@ export function ActionForm() {
               }`}
             />
             {touched.amount && errors.amount && (
-              <p className='text-red-500 text-xs mt-1'>{errors.amount}</p>
+              <p className='text-red-500 text-xs absolute left-0 top-full mt-1'>
+                {errors.amount}
+              </p>
             )}
           </div>
         </>
@@ -257,7 +261,7 @@ export function ActionForm() {
     }
 
     return (
-      <div className='flex-1 mr-2'>
+      <div className='flex-1 mr-2 relative'>
         <Input
           id='data'
           placeholder='Enter data to submit'
@@ -269,7 +273,9 @@ export function ActionForm() {
           }`}
         />
         {touched.data && errors.data && (
-          <p className='text-red-500 text-xs mt-1'>{errors.data}</p>
+          <p className='text-red-500 text-xs absolute left-0 top-full mt-1'>
+            {errors.data}
+          </p>
         )}
       </div>
     );
@@ -280,7 +286,7 @@ export function ActionForm() {
       <form onSubmit={handleSubmit} className='flex items-center flex-wrap'>
         <div className='mr-2'>
           <Select value={actionType} onValueChange={handleActionTypeChange}>
-            <SelectTrigger className='bg-secondary border-white/20 text-white hover:bg-muted focus:ring-white focus:ring-offset-0 transition-all duration-200 px-4 py-5'>
+            <SelectTrigger className='bg-secondary border-white/20 text-white hover:bg-muted focus:ring-white focus:ring-offset-0 transition-all duration-200 px-4 py-6 w-48'>
               <SelectValue placeholder='Select type' />
             </SelectTrigger>
             <SelectContent className='bg-black border border-gray-800 text-white'>
