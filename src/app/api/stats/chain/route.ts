@@ -8,7 +8,10 @@ export async function GET() {
     return NextResponse.json({ data: stats }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch chain statistics' },
+      {
+        error: 'Failed to fetch chain statistics',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

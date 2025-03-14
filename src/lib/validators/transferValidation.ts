@@ -51,6 +51,7 @@ export const isValidSubstrateAddress = (address: string): boolean => {
 
     return true;
   } catch (error) {
+    console.error(error);
     return false;
   }
 };

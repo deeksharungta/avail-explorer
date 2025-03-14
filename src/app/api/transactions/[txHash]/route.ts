@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { hash: string } }
+  { params }: { params: Promise<{ txHash: string }> }
 ) {
   try {
-    const { hash } = params;
-    const transaction = await getTransactionByHash(hash);
+    const { txHash } = await params;
+    const transaction = await getTransactionByHash(txHash);
 
     if (!transaction) {
       return NextResponse.json(
@@ -19,7 +19,10 @@ export async function GET(
     return NextResponse.json({ data: transaction }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch transaction details' },
+      {
+        error: 'Failed to fetch transaction details',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

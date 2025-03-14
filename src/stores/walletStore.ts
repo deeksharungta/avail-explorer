@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { ApiPromise } from '@polkadot/api';
-import { WalletBalance } from '@/types/wallet';
+import { WalletBalance, WalletInterface } from '@/types/wallet';
 import { initOnboard } from '@/lib/wallet/onboard';
 import {
   connectToAvail,
@@ -10,7 +10,7 @@ import {
 import { Account } from '@subwallet-connect/core/dist/types';
 
 interface WalletState {
-  wallet: any | null;
+  wallet: WalletInterface | null;
   account: Account | null;
   api: ApiPromise | null;
   balance: WalletBalance | null;
@@ -69,11 +69,11 @@ export const useWalletStore = create<WalletState>((set, get) => ({
         isLoading: false,
         status: 'Connected to Avail Network',
       });
-    } catch (err) {
-      console.error('Error connecting wallet:', err);
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
       set({
         isLoading: false,
-        error: err.message,
+        error: error instanceof Error ? error.message : String(error),
         status: 'Connection failed',
       });
     }

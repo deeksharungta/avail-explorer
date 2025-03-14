@@ -2,6 +2,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { WalletBalance } from '@/types/wallet';
 import { AVAIL_NODE_ENDPOINT } from '../config/endpoints';
 import Big from 'big.js';
+import { AccountInfo } from 'avail-js-sdk/sdk/account';
 
 export const connectToAvail = async (): Promise<{
   api: ApiPromise;
@@ -19,10 +20,10 @@ export const fetchBalance = async (
   address: string
 ): Promise<WalletBalance> => {
   try {
-    const { data: balance } = await api.query.system.account(address);
+    const { data: balance } = (await api.query.system.account(
+      address
+    )) as unknown as AccountInfo;
 
-    console.log(` balance of ${balance.free}`);
-    console.log(`hey, ${balance.free}`);
     return {
       free: balance.free.toString(),
     };

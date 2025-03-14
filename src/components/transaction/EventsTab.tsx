@@ -7,7 +7,7 @@ import {
 import { Badge } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import CodeBlock from './CodeBlock';
-import { Event } from '@/app/explorer/tx/[txhash]/page';
+import { Event } from './TransactionDetails';
 
 const EventsTab: React.FC<{ events: Event[] }> = ({ events }) => (
   <Card className='bg-secondary border-white/10'>

@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: volumeData }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch data submission volume data' },
+      {
+        error: 'Failed to fetch data submission volume data',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
