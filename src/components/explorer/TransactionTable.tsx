@@ -177,7 +177,7 @@ export default function TransactionTable() {
           </h2>
           <Button
             variant='ghost'
-            className='flex items-center text-primary hover:text-primary hover:bg-[#1a1a1a]'
+            className='flex items-center text-primary hover:text-primary hover:bg-white/10'
             onClick={handleRefresh}
           >
             <RefreshCw className='h-4 w-4 mr-2' />
@@ -256,7 +256,7 @@ export default function TransactionTable() {
                 key={`${tx.txHash || 'unknown'}-${startIndex + index}`}
                 className='border-b border-white/10 hover:bg-secondary bg-black transition-colors cursor-pointer'
               >
-                <TableCell className='font-mono text-white truncate max-w-[100px]'>
+                <TableCell className='font-mono text-white truncate max-w-24'>
                   {tx.txHash}
                 </TableCell>
                 <TableCell className='text-white'>{tx.call || 'N/A'}</TableCell>
