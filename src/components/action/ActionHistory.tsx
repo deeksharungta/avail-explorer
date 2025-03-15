@@ -199,7 +199,7 @@ export function ActionHistory() {
       <div className='flex justify-between items-center mb-6'>
         <div className='flex items-center'>
           <h2 className='text-2xl font-bold text-white'>Recent Actions</h2>
-          <TooltipProvider>
+          {/* <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className='ml-2 h-4 w-4 cursor-pointer text-white/50 mt-2' />
@@ -211,7 +211,7 @@ export function ActionHistory() {
                 </p>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
+          </TooltipProvider> */}
         </div>
         <Select onValueChange={setFilterType} value={filterType}>
           <SelectTrigger className='w-48 bg-secondary text-white border-white/10 cursor-pointer'>
