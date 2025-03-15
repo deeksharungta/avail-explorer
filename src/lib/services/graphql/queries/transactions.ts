@@ -3,28 +3,19 @@ import { gql } from 'graphql-request';
 // Get the latest transactions with pagination
 export const GET_LATEST_TRANSACTIONS = gql`
   query GetLatestTransactions($first: Int!, $after: Cursor) {
-    extrinsics(first: $first, after: $after, orderBy: TIMESTAMP_DESC) {
+    extrinsics(
+      first: $first
+      after: $after
+      orderBy: TIMESTAMP_DESC
+      distinct: [TX_HASH]
+    ) {
       nodes {
-        id
         module
         call
         timestamp
         txHash
-        blockHeight
         success
-        extrinsicIndex
-        hash
-        signature
-        signer
-        feesRounded
-        argsName
-        argsValue
       }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-      totalCount
     }
   }
 `;
@@ -104,22 +95,6 @@ export const GET_TRANSACTION_RELATED_DATA = gql`
         signer
         fees
         feesPerMb
-      }
-    }
-  }
-`;
-
-// Get transaction statistics
-export const GET_TRANSACTION_STATS = gql`
-  query GetTransactionStats {
-    extrinsics(first: 100, orderBy: TIMESTAMP_DESC) {
-      aggregates {
-        sum {
-          feesRounded
-        }
-        average {
-          feesRounded
-        }
       }
     }
   }

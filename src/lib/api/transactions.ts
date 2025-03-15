@@ -2,14 +2,12 @@ import graphqlClient from '@/lib/services/graphql/client';
 import {
   GET_LATEST_TRANSACTIONS,
   GET_TRANSACTION_BY_HASH,
-  GET_TRANSACTION_STATS,
   GET_TRANSACTION_RELATED_DATA,
 } from '@/lib/services/graphql/queries/transactions';
 import {
-  ExtrinsicsResponse,
   ExtrinsicResponse,
-  ExtrinsicStatsResponse,
   ExtrinsicRelatedDataResponse,
+  LatestTransactionsResponse,
 } from '@/types/graphql';
 
 interface GetTransactionsParams {
@@ -19,11 +17,11 @@ interface GetTransactionsParams {
 
 // Fetch the latest transactions with pagination
 export async function getLatestTransactions({
-  first = 5,
+  first = 10,
   after,
 }: GetTransactionsParams) {
   try {
-    const data = await graphqlClient.request<ExtrinsicsResponse>(
+    const data = await graphqlClient.request<LatestTransactionsResponse>(
       GET_LATEST_TRANSACTIONS,
       {
         first,
@@ -105,22 +103,5 @@ export async function getDetailedTransactionByHash(hash: string) {
   } catch (error) {
     console.error(`Error fetching detailed transaction ${hash}:`, error);
     throw new Error('Failed to fetch detailed transaction information');
-  }
-}
-
-// Fetch transaction statistics
-export async function getTransactionStats() {
-  try {
-    const data = await graphqlClient.request<ExtrinsicStatsResponse>(
-      GET_TRANSACTION_STATS
-    );
-
-    return {
-      totalFees: data.extrinsics.aggregates.sum.feesRounded || 0,
-      averageFee: data.extrinsics.aggregates.average.feesRounded || 0,
-    };
-  } catch (error) {
-    console.error('Error fetching transaction stats:', error);
-    throw new Error('Failed to fetch transaction statistics');
   }
 }

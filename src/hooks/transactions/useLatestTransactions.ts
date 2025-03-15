@@ -1,36 +1,30 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { NodeConnection, Extrinsic } from '@/types/graphql';
-import { getLatestTransactions } from '@/lib/api/transactions';
+import { useQuery } from '@tanstack/react-query';
+import { LatestTransactionsResponse } from '@/types/graphql';
 
-interface GetTransactionsParams {
-  first?: number;
-}
+// Fetch latest transactions (10 at once)
+const fetchLatestTransactions =
+  async (): Promise<LatestTransactionsResponse> => {
+    const response = await fetch('/api/transactions?first=10');
 
-// Fetch latest transactions with pagination
-const fetchLatestTransactions = async ({
-  first = 20,
-  pageParam,
-}: GetTransactionsParams & { pageParam: string | null }) => {
-  const params = new URLSearchParams();
-  params.append('first', first.toString());
-  if (pageParam) params.append('after', pageParam);
+    if (!response.ok) {
+      throw new Error('Failed to fetch latest transactions');
+    }
 
-  const transactions = await getLatestTransactions({
-    first,
-    after: pageParam || undefined,
-  });
+    const data = await response.json();
+    console.log({ data });
 
-  return transactions as NodeConnection<Extrinsic>;
-};
+    return {
+      extrinsics: data.data,
+    };
+  };
 
-// Latest transactions hook with infinite query
-export function useLatestTransactions(first = 20) {
-  return useInfiniteQuery<NodeConnection<Extrinsic>, Error>({
-    queryKey: ['latestTransactions', first],
-    queryFn: ({ pageParam }) =>
-      fetchLatestTransactions({ first, pageParam: pageParam as string | null }),
-    initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage.pageInfo.endCursor,
-    staleTime: 15 * 1000,
+// Latest transactions hook
+export function useLatestTransactions() {
+  return useQuery<LatestTransactionsResponse, Error>({
+    queryKey: ['latestTransactions', { fresh: true }],
+    queryFn: fetchLatestTransactions,
+    refetchInterval: 20 * 1000, // Poll every 20 seconds
+    refetchOnWindowFocus: false,
+    staleTime: 10 * 1000,
   });
 }

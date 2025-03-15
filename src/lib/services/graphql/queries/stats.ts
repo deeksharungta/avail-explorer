@@ -1,75 +1,49 @@
 import { gql } from 'graphql-request';
 
-// Get overall chain statistics
-export const GET_CHAIN_STATS = gql`
-  query GetChainStats {
+// Query to get the latest block
+export const GET_LATEST_BLOCK = gql`
+  query GetLatestBlock {
     latestBlock: blocks(first: 1, orderBy: NUMBER_DESC) {
       nodes {
         number
         timestamp
       }
     }
-    totalBlocks: blocks {
-      totalCount
-    }
+  }
+`;
+
+// Query to get total transaction counts
+export const GET_TOTAL_TRANSACTION_COUNTS = gql`
+  query GetTotalTransactionCounts {
     totalTransactions: extrinsics {
       totalCount
     }
+  }
+`;
+
+// Query to get total blobs count
+export const GET_TOTAL_BLOBS_COUNTS = gql`
+  query GetTotalBlobsCounts {
     totalDataSubmissions: dataSubmissions {
       totalCount
     }
-    recentBlocks: blocks(first: 20, orderBy: NUMBER_DESC) {
-      nodes {
-        number
-        timestamp
-        nbExtrinsics
-      }
-    }
-    recentTransactions: extrinsics(first: 20, orderBy: TIMESTAMP_DESC) {
-      nodes {
-        module
-        call
-        success
-      }
-    }
+  }
+`;
+
+// Query to get data submission statistics
+export const GET_DATA_SUBMISSION_STATS = gql`
+  query GetDataSubmissionStats {
     dataSubmissionStats: dataSubmissions {
       aggregates {
         sum {
           byteSize
+          fees
+          feesPerMb
         }
-      }
-    }
-  }
-`;
-
-// Get transaction volume over time
-export const GET_TRANSACTION_VOLUME = gql`
-  query GetTransactionVolume($timeframe: Int!) {
-    extrinsics(
-      filter: {
-        timestamp: { greaterThan: "NOW() - INTERVAL '$timeframe DAYS'" }
-      }
-    ) {
-      groupedAggregates(groupBy: [TIMESTAMP_TRUNCATED_TO_DAY]) {
-        keys
-        count
-      }
-    }
-  }
-`;
-
-// Get data submission volume over time
-export const GET_DATA_SUBMISSION_VOLUME = gql`
-  query GetDataSubmissionVolume($timeframe: Int!) {
-    dataSubmissions(
-      filter: {
-        timestamp: { greaterThan: "NOW() - INTERVAL '$timeframe DAYS'" }
-      }
-    ) {
-      groupedAggregates(groupBy: [TIMESTAMP_TRUNCATED_TO_DAY]) {
-        keys
-        sum {
+        average {
           byteSize
+          fees
+          feesPerMb
         }
       }
     }
