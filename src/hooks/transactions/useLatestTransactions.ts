@@ -26,7 +26,6 @@ const DUMMY_TRANSACTIONS = {
 const fetchLatestTransactions = async (params = { first: 10 }) => {
   try {
     const extrinsics = await getLatestTransactions(params);
-    console.log({ extrinsics });
     return extrinsics;
   } catch (error) {
     console.error('Error in fetchLatestTransactions:', error);

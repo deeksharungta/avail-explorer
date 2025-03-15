@@ -101,15 +101,6 @@ export default function TransactionTable() {
   const { data, isLoading, isError, isFetching, refetch } =
     useLatestTransactions();
 
-  console.log({ data });
-
-  // Debug data structure
-  useEffect(() => {
-    if (data) {
-      console.log('Transaction data structure:', data);
-    }
-  }, [data]);
-
   // Reset to first page when new data is fetched
   useEffect(() => {
     if (data) {

@@ -74,11 +74,6 @@ export const postData = async (
                   status: 'success',
                   error: undefined,
                 });
-
-                console.log(
-                  'Transaction finalized:',
-                  status.asFinalized.toHex()
-                );
               }
             }
           )
