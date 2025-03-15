@@ -41,9 +41,10 @@ const RelatedDetails: React.FC<RelatedDetailsProps> = ({ extrinsic }) => {
         >
           Details
         </TabsTrigger>
-        <TabsTrigger
-          value='events'
-          className='
+        {events.length > 0 && (
+          <TabsTrigger
+            value='events'
+            className='
             cursor-pointer
             px-3 py-1 text-sm rounded-md
             data-[state=active]:bg-white/10 
@@ -52,9 +53,10 @@ const RelatedDetails: React.FC<RelatedDetailsProps> = ({ extrinsic }) => {
             hover:text-white/80
             transition-colors
           '
-        >
-          Events ({extrinsic.nbEvents})
-        </TabsTrigger>
+          >
+            Events ({extrinsic.nbEvents})
+          </TabsTrigger>
+        )}
         {transfers.length > 0 && (
           <TabsTrigger
             value='transfers'
