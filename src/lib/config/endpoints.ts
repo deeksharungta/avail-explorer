@@ -7,3 +7,5 @@ export const AVAIL_HTTP_RPC = process.env.NEXT_PUBLIC_AVAIL_TURING_RPC_HTTP!;
 
 //Avail Turing WS RPC
 export const AVAIL_WS_RPC = process.env.NEXT_PUBLIC_AVAIL_TURING_RPC_WS!;
+
+export const EXPLORER_BASE_URL = 'https://avail-turing.subscan.io';

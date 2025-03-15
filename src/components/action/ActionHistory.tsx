@@ -20,6 +20,7 @@ import {
   TooltipContent,
 } from '@radix-ui/react-tooltip';
 import { parseError } from '@/lib/error';
+import { getTransactionLink } from '@/lib/utils';
 
 export function ActionHistory() {
   const { actions } = useActionsStore();
@@ -128,10 +129,6 @@ export function ActionHistory() {
     }
   };
 
-  const getExplorerLink = (hash: string) => {
-    return `https://avail-turing.subscan.io/extrinsic/${hash}`;
-  };
-
   // Render ID with pending indicator if needed
   const renderID = (action: ActionRecord) => {
     const isPending = action.status === 'pending';
@@ -182,7 +179,7 @@ export function ActionHistory() {
                     action.transactionHash
                       ? () => {
                           window.open(
-                            getExplorerLink(action.transactionHash || ''),
+                            getTransactionLink(action.transactionHash || ''),
                             '_blank'
                           );
                         }

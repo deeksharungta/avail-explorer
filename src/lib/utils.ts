@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'sonner';
+import { EXPLORER_BASE_URL } from './config/endpoints';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -65,3 +66,11 @@ export function formatDateLocalized(dateString: string): string {
     return dateString || 'Invalid date';
   }
 }
+
+export const getTransactionLink = (hash: string) => {
+  return `${EXPLORER_BASE_URL}/extrinsic/${hash}`;
+};
+
+export const getAccountLink = (address: string) => {
+  return `${EXPLORER_BASE_URL}/account/${address}`;
+};

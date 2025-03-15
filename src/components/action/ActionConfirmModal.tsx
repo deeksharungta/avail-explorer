@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { formatAddress } from '@/lib/utils';
+import { formatAddress, getAccountLink } from '@/lib/utils';
 import { ActionRecord } from '@/stores/actionStore';
 
 interface ActionConfirmModalProps {
@@ -58,7 +58,7 @@ export function ActionConfirmModal({
             <span className='text-sm text-white/80'>Recipient</span>
             <Link
               target='_blank'
-              href={`https://avail-turing.subscan.io/account/${details?.recipient}`}
+              href={getAccountLink(details?.recipient || '')}
               className='break-all font-medium text-sm hover:underline'
             >
               {formatAddress(details?.recipient as string)}
