@@ -107,3 +107,9 @@ src/
 ### Viewing Transaction History
 
 The "Recent Actions" section on the main page shows your transaction history, including status, type, and timestamp.
+
+### Exploring Transactions
+
+1. Navigate to the Explorer page
+2. Browse through recent transactions
+3. Click on any transaction hash to view detailed information
