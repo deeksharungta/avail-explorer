@@ -1,79 +1,74 @@
 import graphqlClient from '@/lib/services/graphql/client';
 import {
-  GET_CHAIN_STATS,
-  GET_TRANSACTION_VOLUME,
-  GET_DATA_SUBMISSION_VOLUME,
+  GET_LATEST_BLOCK,
+  GET_DATA_SUBMISSION_STATS,
+  GET_TOTAL_TRANSACTION_COUNTS,
+  GET_TOTAL_BLOBS_COUNTS,
 } from '@/lib/services/graphql/queries/stats';
 import {
-  ChainStatsResponse,
-  TransactionVolumeResponse,
-  DataSubmissionVolumeResponse,
+  LatestBlockResponse,
+  DataSubmissionStatsResponse,
+  TotalTransactionCountsResponse,
+  TotalBlobsCountsResponse,
 } from '@/types/graphql';
 
-//Fetch overall chain statistics
-export async function getChainStats() {
+// Fetch latest block
+export async function fetchLatestBlock() {
   try {
-    const data = await graphqlClient.request<ChainStatsResponse>(
-      GET_CHAIN_STATS
+    const data = await graphqlClient.request<LatestBlockResponse>(
+      GET_LATEST_BLOCK
     );
+    return data.latestBlock.nodes[0] || null;
+  } catch (error) {
+    console.error('Error fetching latest block:', error);
+    throw new Error('Failed to fetch latest block');
+  }
+}
 
+// Fetch total transactions count
+export async function fetchTotalTransactions() {
+  try {
+    const data = await graphqlClient.request<TotalTransactionCountsResponse>(
+      GET_TOTAL_TRANSACTION_COUNTS
+    );
     return {
-      latestBlock: data.latestBlock.nodes[0] || null,
-      totalBlocks: data.totalBlocks.totalCount || 0,
-      totalTransactions: data.totalTransactions.totalCount || 0,
-      totalDataSubmissions: data.totalDataSubmissions.totalCount || 0,
-      recentBlocks: data.recentBlocks.nodes || [],
-      recentTransactions: data.recentTransactions.nodes || [],
-      totalDataSize: data.dataSubmissionStats.aggregates.sum.byteSize || 0,
+      totalTransactions: data.totalTransactions.totalCount,
     };
   } catch (error) {
-    console.error('Error fetching chain stats:', error);
-    throw new Error('Failed to fetch chain statistics');
+    console.error('Error fetching total transactions:', error);
+    throw new Error('Failed to fetch total transactions');
   }
 }
 
-//Fetch transaction volume over time
-export async function getTransactionVolume(timeframe: number) {
+// Fetch total blobs count
+export async function fetchTotalBlobs() {
   try {
-    const data = await graphqlClient.request<TransactionVolumeResponse>(
-      GET_TRANSACTION_VOLUME,
-      {
-        timeframe,
-      }
+    const data = await graphqlClient.request<TotalBlobsCountsResponse>(
+      GET_TOTAL_BLOBS_COUNTS
     );
-
-    // Transform data for chart display
-    const volumeData = data.extrinsics.groupedAggregates.map((group) => ({
-      date: group.keys[0], // First key is the date (from groupBy)
-      count: group.count,
-    }));
-
-    return volumeData;
+    return {
+      totalBlobs: data.totalDataSubmissions.totalCount,
+    };
   } catch (error) {
-    console.error('Error fetching transaction volume:', error);
-    throw new Error('Failed to fetch transaction volume data');
+    console.error('Error fetching total transactions:', error);
+    throw new Error('Failed to fetch total transactions');
   }
 }
 
-// Fetch data submission volume over time
-export async function getDataSubmissionVolume(timeframe: number) {
+// Fetch data submission statistics
+export async function fetchDataSubmissionStats() {
   try {
-    const data = await graphqlClient.request<DataSubmissionVolumeResponse>(
-      GET_DATA_SUBMISSION_VOLUME,
-      {
-        timeframe,
-      }
+    const data = await graphqlClient.request<DataSubmissionStatsResponse>(
+      GET_DATA_SUBMISSION_STATS
     );
-
-    // Transform data for chart display
-    const volumeData = data.dataSubmissions.groupedAggregates.map((group) => ({
-      date: group.keys[0], // First key is the date (from groupBy)
-      size: group.sum.byteSize,
-    }));
-
-    return volumeData;
+    return {
+      totalByteSize: data.dataSubmissionStats.aggregates.sum.byteSize || 0,
+      avgByteSize: data.dataSubmissionStats.aggregates.average.byteSize || 0,
+      totalFees: data.dataSubmissionStats.aggregates.sum.fees || 0,
+      avgFees: data.dataSubmissionStats.aggregates.average.fees || 0,
+    };
   } catch (error) {
-    console.error('Error fetching data submission volume:', error);
-    throw new Error('Failed to fetch data submission volume data');
+    console.error('Error fetching data submission stats:', error);
+    throw new Error('Failed to fetch data submission statistics');
   }
 }

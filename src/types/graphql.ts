@@ -119,6 +119,18 @@ export interface LogNode {
   data: string;
 }
 
+export interface LatestTransactionsResponse {
+  extrinsics: {
+    nodes: {
+      module: string;
+      call: string;
+      timestamp: string;
+      txHash: string;
+      success: boolean;
+    }[];
+  };
+}
+
 // Response for related data
 export interface ExtrinsicRelatedDataResponse {
   events: {
@@ -234,64 +246,47 @@ export interface AccountTransactionsResponse {
 }
 
 // Chain statistics types
-export interface ChainStatsResponse {
+export interface LatestBlockResponse {
   latestBlock: {
-    nodes: Block[];
+    nodes: Pick<Block, 'number' | 'timestamp'>[];
   };
-  totalBlocks: {
-    totalCount: number;
-  };
+}
+
+// Total Counts Type
+
+export interface TotalTransactionCountsResponse {
   totalTransactions: {
     totalCount: number;
   };
+}
+
+export interface TotalBlobsCountsResponse {
   totalDataSubmissions: {
     totalCount: number;
   };
-  recentBlocks: {
-    nodes: Block[];
-  };
-  recentTransactions: {
-    nodes: Extrinsic[];
-  };
+}
+
+// Data Submission Stats Type
+export interface DataSubmissionStatsResponse {
   dataSubmissionStats: {
     aggregates: {
       sum: {
         byteSize: number;
+        fees: number;
+        feesPerMb: number;
+      };
+      average: {
+        byteSize: number;
+        fees: number;
+        feesPerMb: number;
       };
     };
   };
 }
 
-export interface GroupedAggregate {
-  keys: string[];
-  count: number;
-}
-
-export interface DataSizeGroupedAggregate {
-  keys: string[];
-  sum: {
-    byteSize: number;
-  };
-}
-
-export interface TransactionVolumeResponse {
-  extrinsics: {
-    groupedAggregates: GroupedAggregate[];
-  };
-}
-
-export interface DataSubmissionVolumeResponse {
-  dataSubmissions: {
-    groupedAggregates: DataSizeGroupedAggregate[];
-  };
-}
-
-export interface VolumeDataPoint {
-  date: string;
-  count: number;
-}
-
-export interface DataSizeVolumeDataPoint {
-  date: string;
-  size: number;
+export interface DataSubmissionStats {
+  totalByteSize: number;
+  avgByteSize: number;
+  totalFees: number;
+  avgFees: number;
 }
