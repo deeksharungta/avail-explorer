@@ -1,5 +1,4 @@
-import { XCircle, RefreshCw } from 'lucide-react';
-import { Button } from '../ui/button';
+import { XCircle } from 'lucide-react';
 
 const NoTransactionFound: React.FC<{ hash: string }> = ({ hash }) => {
   return (
