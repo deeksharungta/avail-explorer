@@ -1,31 +1,23 @@
-import { ErrorInfo } from '@/components/transaction/ErrorCard';
-import { Extrinsic } from '@/types/graphql';
+import { getTransactionByHash } from '@/lib/api/transactions';
+import { ExtrinsicWithRelations } from '@/types/graphql';
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
-export interface TransactionResult {
-  extrinsic: Extrinsic;
-  events: Event[];
-  error?: ErrorInfo;
-}
-
-// Fetch transaction by hash
+// Fetch transaction by hash with related data
 const fetchTransactionByHash = async (
   hash: string
-): Promise<TransactionResult> => {
-  const response = await fetch(`/api/transactions/${hash}`);
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || 'Failed to fetch transaction details');
-  }
+): Promise<ExtrinsicWithRelations> => {
+  const transaction = await getTransactionByHash(hash);
 
-  const result = await response.json();
-  return result.data;
+  if (!transaction) {
+    throw new Error('Transaction not found');
+  }
+  return transaction;
 };
 
 // Transaction details hook
 export function useTransaction(
   hash: string | undefined
-): UseQueryResult<TransactionResult, Error> {
+): UseQueryResult<ExtrinsicWithRelations, Error> {
   return useQuery({
     queryKey: ['transaction', hash],
     queryFn: () => fetchTransactionByHash(hash as string),
