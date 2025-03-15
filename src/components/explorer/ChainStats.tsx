@@ -3,7 +3,6 @@
 import React from 'react';
 import StatCard from './StatCard';
 import { useChainStats } from '@/hooks/stats/useChainStats';
-import { formatBytes, formatNumber } from '@/lib/utils';
 
 // Skeleton Loader Component
 function StatCardSkeleton() {
@@ -49,16 +48,16 @@ export default function ChainStats() {
     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8'>
       <StatCard
         title='Total Blob Size'
-        value={formatBytes(dataSubmissionStats?.totalByteSize || 0)}
+        value={dataSubmissionStats?.totalByteSize.toString() || '0'}
       />
       <StatCard title='Latest Block' value={`#${latestBlock?.number || '0'}`} />
       <StatCard
         title='Total Transactions'
-        value={formatNumber(totalTransactions || 0)}
+        value={totalTransactions?.toString() || '0'}
       />
       <StatCard
         title='Total Data Submissions'
-        value={formatNumber(totalBlobs || 0)}
+        value={totalBlobs?.toString() || '0'}
       />
     </div>
   );
