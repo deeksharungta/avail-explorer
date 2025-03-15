@@ -68,7 +68,9 @@ export function formatDateLocalized(dateString: string): string {
 }
 
 export const getTransactionLink = (hash: string) => {
-  return `${EXPLORER_BASE_URL}/extrinsic/${hash}`;
+  return `${
+    process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000'
+  }/explorer/tx/${hash}`;
 };
 
 export const getAccountLink = (address: string) => {
