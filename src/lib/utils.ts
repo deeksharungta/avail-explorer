@@ -73,6 +73,10 @@ export const getTransactionLink = (hash: string) => {
   }/explorer/tx/${hash}`;
 };
 
+export const getExplorerLink = (hash: string) => {
+  return `${EXPLORER_BASE_URL}/extrinsic/${hash}`;
+};
+
 export const getAccountLink = (address: string) => {
   return `${EXPLORER_BASE_URL}/account/${address}`;
 };

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import ErrorCard from '@/components/transaction/ErrorCard';
 import ExtrinsicOverview from '@/components/transaction/ExtrinsicOverview';
 import NoTransactionFound from '@/components/transaction/NoTransactionFound';
-import { formatDate, copyToClipboard, getTransactionLink } from '@/lib/utils';
+import { formatDate, copyToClipboard, getExplorerLink } from '@/lib/utils';
 import { useTransaction } from '@/hooks/transactions/useTransaction';
 import RelatedDetails from './RelatedDetails';
 
@@ -81,7 +81,7 @@ export default function TransactionDetails({
           </Button>
           <Button
             onClick={() => {
-              window.open(getTransactionLink(transaction.txHash), '_blank');
+              window.open(getExplorerLink(transaction.txHash), '_blank');
             }}
             variant='outline'
             size='sm'
