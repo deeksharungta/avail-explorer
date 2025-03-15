@@ -15,6 +15,7 @@ import { ActionConfirmModal } from './ActionConfirmModal';
 import WalletConnect from '../wallet/WalletConnect';
 import { AlertCircle } from 'lucide-react';
 import { useActionsStore } from '@/stores/actionStore';
+import { WalletBalance } from '@/types/wallet';
 
 type ActionType = 'transfer' | 'data-submit';
 
@@ -30,6 +31,59 @@ interface FormErrors {
   data?: string;
 }
 
+// Field validator functions for cleaner code
+const validators = {
+  recipient: (value: string): string | undefined => {
+    if (!value) return 'Recipient address is required';
+    if (!value.startsWith('5')) return 'Invalid address format';
+    return undefined;
+  },
+
+  amount: (
+    value: string,
+    balance: WalletBalance | null
+  ): string | undefined => {
+    if (!value) return 'Amount is required';
+
+    const amountNum = parseFloat(value);
+    if (isNaN(amountNum) || amountNum <= 0)
+      return 'Amount must be a positive number';
+
+    if (balance?.free) {
+      try {
+        // First convert to a string with the decimal point
+        const amountStr = amountNum.toString();
+
+        // Handle the decimal places correctly
+        const [whole, decimalPart] = amountStr.includes('.')
+          ? amountStr.split('.')
+          : [amountStr, ''];
+
+        // Pad the decimal part to 18 places or truncate if longer
+        const decimal = decimalPart.padEnd(18, '0').slice(0, 18);
+
+        // Create the string representation without decimal point
+        const amountInSmallestUnit = whole + decimal;
+
+        if (BigInt(amountInSmallestUnit) > BigInt(balance.free)) {
+          return 'Insufficient balance';
+        }
+      } catch (e) {
+        console.error('Error comparing balance:', e);
+        return 'Error validating amount';
+      }
+    }
+
+    return undefined;
+  },
+
+  data: (value: string): string | undefined => {
+    if (!value) return 'Data is required';
+    if (value.length > 1024) return 'Data must be less than 1024 characters';
+    return undefined;
+  },
+};
+
 export function ActionForm() {
   // State for form inputs
   const [actionType, setActionType] = useState<ActionType>('transfer');
@@ -41,9 +95,10 @@ export function ActionForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [isFormValid, setIsFormValid] = useState(false);
 
   // Wallet and actions hook
-  const { account } = useWalletStore();
+  const { account, balance } = useWalletStore();
   const { transferAvail, submitData, isProcessing, error } = useActionsStore();
 
   // Handle input changes
@@ -67,6 +122,11 @@ export function ActionForm() {
         [id]: undefined,
       }));
     }
+
+    // Run form validation after a short delay to avoid excessive validation during typing
+    setTimeout(() => {
+      validateForm();
+    }, 100);
   };
 
   // Handle field blur for validation
@@ -80,95 +140,76 @@ export function ActionForm() {
 
     // Validate single field
     validateField(id as keyof FormValues);
+
+    // Check overall form validity
+    validateForm();
+  };
+
+  // Get active fields based on action type
+  const getActiveFields = (): (keyof FormValues)[] => {
+    return actionType === 'transfer' ? ['recipient', 'amount'] : ['data'];
   };
 
   // Validate a single field
   const validateField = (field: keyof FormValues) => {
-    const newErrors: FormErrors = { ...errors };
+    // Skip validation for fields not relevant to current action type
+    if (!getActiveFields().includes(field)) return true;
+
+    const newErrors = { ...errors };
+    let errorMessage: string | undefined;
 
     switch (field) {
       case 'recipient':
-        if (actionType === 'transfer') {
-          if (!values.recipient) {
-            newErrors.recipient = 'Recipient address is required';
-          } else if (!values.recipient.startsWith('5')) {
-            newErrors.recipient = 'Invalid address format';
-          } else {
-            delete newErrors.recipient;
-          }
-        }
+        errorMessage = validators.recipient(values.recipient);
         break;
-
       case 'amount':
-        if (actionType === 'transfer') {
-          if (!values.amount) {
-            newErrors.amount = 'Amount is required';
-          } else {
-            const amountNum = parseFloat(values.amount);
-            if (isNaN(amountNum) || amountNum <= 0) {
-              newErrors.amount = 'Amount must be a positive number';
-            } else {
-              delete newErrors.amount;
-            }
-          }
-        }
+        errorMessage = validators.amount(values.amount, balance);
         break;
-
       case 'data':
-        if (actionType === 'data-submit') {
-          if (!values.data) {
-            newErrors.data = 'Data is required';
-          } else if (values.data.length > 1024) {
-            newErrors.data = 'Data must be less than 1024 characters';
-          } else {
-            delete newErrors.data;
-          }
-        }
+        errorMessage = validators.data(values.data);
         break;
     }
 
+    if (errorMessage) {
+      newErrors[field] = errorMessage;
+    } else {
+      delete newErrors[field];
+    }
+
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return !errorMessage;
   };
 
   // Validate all form fields
   const validateForm = () => {
-    const fieldsToValidate =
-      actionType === 'transfer' ? ['recipient', 'amount'] : ['data'];
+    const fieldsToValidate = getActiveFields();
+    const newErrors: FormErrors = {};
 
     // Mark all relevant fields as touched
     const newTouched = { ...touched };
     fieldsToValidate.forEach((field) => {
       newTouched[field] = true;
-    });
-    setTouched(newTouched);
 
-    // Validate each field
-    const newErrors: FormErrors = {};
-
-    if (actionType === 'transfer') {
-      if (!values.recipient) {
-        newErrors.recipient = 'Recipient address is required';
-      } else if (!values.recipient.startsWith('5')) {
-        newErrors.recipient = 'Invalid address format';
-      }
-
-      if (!values.amount) {
-        newErrors.amount = 'Amount is required';
-      } else {
-        const amountNum = parseFloat(values.amount);
-        if (isNaN(amountNum) || amountNum <= 0) {
-          newErrors.amount = 'Amount must be a positive number';
+      // Validate each field and collect errors
+      const errorMessage = (() => {
+        switch (field) {
+          case 'recipient':
+            return validators.recipient(values.recipient);
+          case 'amount':
+            return validators.amount(values.amount, balance);
+          case 'data':
+            return validators.data(values.data);
+          default:
+            return undefined;
         }
-      }
-    } else {
-      if (!values.data) {
-        newErrors.data = 'Data is required';
-      } else if (values.data.length > 1024) {
-        newErrors.data = 'Data must be less than 1024 characters';
-      }
-    }
+      })();
 
+      if (errorMessage) {
+        newErrors[field] = errorMessage;
+      }
+    });
+
+    setTouched(newTouched);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -189,6 +230,7 @@ export function ActionForm() {
     setActionType(value);
     setErrors({});
     setTouched({});
+    setIsFormValid(false);
   };
 
   // Confirm transaction
@@ -213,72 +255,73 @@ export function ActionForm() {
     setIsConfirmModalOpen(false);
   };
 
+  // Render input field with error handling
+  const renderField = (
+    id: keyof FormValues,
+    type: string,
+    placeholder: string,
+    className: string = '',
+    extraProps = {}
+  ) => {
+    return (
+      <div className={`relative ${className}`}>
+        <Input
+          type={type}
+          id={id}
+          placeholder={placeholder}
+          value={values[id]}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={`bg-secondary border-white/20 focus:border-white/20 text-white h-12 px-4 ${
+            touched[id] && errors[id] ? 'border-red-500' : ''
+          }`}
+          {...extraProps}
+        />
+        {touched[id] && errors[id] && (
+          <p className='text-red-500 text-xs absolute left-0 top-full mt-1'>
+            {errors[id]}
+          </p>
+        )}
+      </div>
+    );
+  };
+
   // Render form inputs based on action type
   const renderTypeSpecificInputs = () => {
     if (actionType === 'transfer') {
       return (
         <>
-          <div className='flex-1 mr-2 relative'>
-            <Input
-              type='text'
-              id='recipient'
-              placeholder='Enter recipient address'
-              value={values.recipient}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={`bg-secondary border-white/20 focus:border-white/20 text-white h-12 px-4 ${
-                touched.recipient && errors.recipient ? 'border-red-500' : ''
-              }`}
-            />
-            {touched.recipient && errors.recipient && (
-              <p className='text-red-500 text-xs absolute left-0 top-full mt-1'>
-                {errors.recipient}
-              </p>
-            )}
-          </div>
-          <div className='w-32 mr-2 relative'>
-            <Input
-              type='number'
-              id='amount'
-              placeholder='Amount'
-              value={values.amount}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              step='0.000001'
-              min='0'
-              className={`bg-secondary border-white/20 focus:border-white/20 text-white h-12 px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                touched.amount && errors.amount ? 'border-red-500' : ''
-              }`}
-            />
-            {touched.amount && errors.amount && (
-              <p className='text-red-500 text-xs absolute left-0 top-full mt-1'>
-                {errors.amount}
-              </p>
-            )}
-          </div>
+          {renderField(
+            'recipient',
+            'text',
+            'Enter recipient address',
+            'flex-1 mr-2'
+          )}
+          {renderField('amount', 'number', 'Amount', 'w-32 mr-2', {
+            step: '0.000001',
+            min: '0',
+            className: `bg-secondary border-white/20 focus:border-white/20 text-white h-12 px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+              touched.amount && errors.amount ? 'border-red-500' : ''
+            }`,
+          })}
         </>
       );
     }
 
-    return (
-      <div className='flex-1 mr-2 relative'>
-        <Input
-          id='data'
-          placeholder='Enter data to submit'
-          value={values.data}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          className={`bg-secondary border-white/20 focus:border-white/20 text-white h-12 px-4 ${
-            touched.data && errors.data ? 'border-red-500' : ''
-          }`}
-        />
-        {touched.data && errors.data && (
-          <p className='text-red-500 text-xs absolute left-0 top-full mt-1'>
-            {errors.data}
-          </p>
-        )}
-      </div>
-    );
+    return renderField('data', 'text', 'Enter data to submit', 'flex-1 mr-2');
+  };
+
+  // Format error message
+  const formatErrorMessage = (errorStr: string) => {
+    try {
+      // Try to parse if the error is a JSON string
+      const errorObj = JSON.parse(errorStr);
+      return Object.entries(errorObj)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('; ');
+    } catch {
+      return errorStr;
+    }
   };
 
   return (
@@ -311,8 +354,8 @@ export function ActionForm() {
         {account ? (
           <Button
             type='submit'
-            className='bg-secondary text-white hover:bg-muted border-white/20 border rounded-md font-normal transition-all duration-200 h-12 px-6 text-base cursor-pointer'
-            disabled={isProcessing}
+            className='bg-secondary text-white hover:bg-muted border-white/20 border rounded-md font-normal transition-all duration-200 h-12 px-6 text-base cursor-pointer disabled:cursor-not-allowed disabled:opacity-50'
+            disabled={isProcessing || !isFormValid}
           >
             {isProcessing ? 'Processing...' : 'Submit'}
           </Button>
@@ -325,20 +368,7 @@ export function ActionForm() {
         {error && (
           <div className='w-full mt-2 flex items-center text-red-500 text-sm'>
             <AlertCircle className='h-4 w-4 mr-1' />
-            <span>
-              {(() => {
-                try {
-                  // Try to parse if the error is a JSON string
-                  const errorObj = JSON.parse(error);
-                  const messages = Object.entries(errorObj)
-                    .map(([key, value]) => `${key}: ${value}`)
-                    .join('; ');
-                  return messages;
-                } catch {
-                  return error;
-                }
-              })()}
-            </span>
+            <span>{formatErrorMessage(error)}</span>
           </div>
         )}
       </form>
