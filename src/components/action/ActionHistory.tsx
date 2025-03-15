@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -10,9 +10,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Loader2, Info } from 'lucide-react';
+import {
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Info,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 import { ActionRecord, useActionsStore } from '@/stores/actionStore';
+import { useWalletStore } from '@/stores/walletStore'; // Assuming you have a wallet store
 import {
   TooltipProvider,
   Tooltip,
@@ -21,9 +30,32 @@ import {
 } from '@radix-ui/react-tooltip';
 import { parseError } from '@/lib/error';
 import { getTransactionLink } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 export function ActionHistory() {
   const { actions } = useActionsStore();
+  const { account } = useWalletStore();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterType, setFilterType] = useState('all');
+  const rowsPerPage = 10;
+
+  const filteredActions =
+    filterType === 'all'
+      ? actions
+      : actions.filter((action) => action.type === filterType);
+
+  const paginatedActions = filteredActions.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredActions.length / rowsPerPage);
 
   // Truncate long addresses or data
   const truncate = (str: string, length = 10) => {
@@ -145,9 +177,53 @@ export function ActionHistory() {
     );
   };
 
+  // Pagination handlers
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  if (!account) {
+    return;
+  }
+
   return (
     <div className='w-full mx-auto'>
-      <h2 className='text-2xl font-bold mb-6 text-white'>Recent Actions</h2>
+      <div className='flex justify-between items-center mb-6'>
+        <div className='flex items-center'>
+          <h2 className='text-2xl font-bold text-white'>Recent Actions</h2>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className='ml-2 h-4 w-4 cursor-pointer text-white/50 mt-2' />
+              </TooltipTrigger>
+              <TooltipContent className='bg-secondary border rounded-md border-white/10 p-2 text-white max-w-xs'>
+                <p className='text-sm'>
+                  Actions are stored in local storage and may be lost if
+                  it&apos;s cleared.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <Select onValueChange={setFilterType} value={filterType}>
+          <SelectTrigger className='w-48 bg-secondary text-white border-white/10 cursor-pointer'>
+            <SelectValue placeholder='Filter by type' />
+          </SelectTrigger>
+          <SelectContent className='bg-background text-white border-white/10 '>
+            <SelectItem value='all'>All</SelectItem>
+            <SelectItem value='transfer'>Transfer</SelectItem>
+            <SelectItem value='data_submit'>Data Submit</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <div className='rounded-md border border-white/10 overflow-hidden'>
         <Table>
           <TableHeader>
@@ -162,14 +238,14 @@ export function ActionHistory() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {actions.length === 0 ? (
+            {paginatedActions.length === 0 ? (
               <TableRow className='border-b border-white/10 hover:bg-transparent py-6'>
                 <TableCell colSpan={5} className='text-center text-white/80 '>
                   No recent actions
                 </TableCell>
               </TableRow>
             ) : (
-              actions.map((action) => (
+              paginatedActions.map((action) => (
                 <TableRow
                   key={action.id}
                   className={`border-b border-white/10 hover:bg-secondary cursor-pointer ${
@@ -201,6 +277,34 @@ export function ActionHistory() {
           </TableBody>
         </Table>
       </div>
+      {/* Pagination Controls */}
+      {paginatedActions.length > 0 && (
+        <div className='flex justify-between items-center mt-4'>
+          <div className='text-white/80 text-sm'>
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className='flex items-center space-x-2'>
+            <Button
+              variant='outline'
+              size='icon'
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className='bg-secondary border-white/10 text-white hover:bg-white/10 hover:text-white  disabled:opacity-50 cursor-pointer'
+            >
+              <ChevronLeft className='h-4 w-4' />
+            </Button>
+            <Button
+              variant='outline'
+              size='icon'
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className='bg-secondary text-white border-white/10 hover:bg-white/10 hover:text-white disabled:opacity-50 cursor-pointer'
+            >
+              <ChevronRight className='h-4 w-4' />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
