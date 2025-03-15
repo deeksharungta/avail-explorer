@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatDate } from '@/lib/utils';
+import { formatDate, getTransactionLink } from '@/lib/utils';
 
 export interface Transaction {
   hash: string;
@@ -243,8 +243,18 @@ export default function TransactionTable() {
           <TableBody>
             {currentTransactions.map((tx, index) => (
               <TableRow
+                onClick={
+                  tx.txHash
+                    ? () => {
+                        window.open(
+                          getTransactionLink(tx.txHash || ''),
+                          '_blank'
+                        );
+                      }
+                    : undefined
+                }
                 key={`${tx.txHash || 'unknown'}-${startIndex + index}`}
-                className='border-b border-white/10 hover:bg-secondary bg-black transition-colors'
+                className='border-b border-white/10 hover:bg-secondary bg-black transition-colors cursor-pointer'
               >
                 <TableCell className='font-mono text-white truncate max-w-[100px]'>
                   {tx.txHash}
