@@ -151,9 +151,7 @@ export default function TransactionTable() {
     );
   }
 
-  // Get all transactions and ensure uniqueness by txHash
-  // Fix data structure access - this was one of the key issues
-  const allTransactions = data?.extrinsics?.nodes || [];
+  const allTransactions = data?.nodes || [];
 
   // Calculate pagination
   const startIndex = currentPage * ITEMS_PER_PAGE;

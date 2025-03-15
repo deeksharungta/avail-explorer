@@ -3,12 +3,7 @@ import { gql } from 'graphql-request';
 // Get the latest transactions with pagination
 export const GET_LATEST_TRANSACTIONS = gql`
   query GetLatestTransactions($first: Int!, $after: Cursor) {
-    extrinsics(
-      first: $first
-      after: $after
-      orderBy: TIMESTAMP_DESC
-      distinct: [TX_HASH]
-    ) {
+    extrinsics(first: $first, after: $after, orderBy: TIMESTAMP_DESC) {
       nodes {
         module
         call
