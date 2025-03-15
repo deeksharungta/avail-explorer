@@ -31,7 +31,7 @@ export interface Block {
 // Transaction (Extrinsic) related types
 export interface Extrinsic {
   id: string;
-  blockId: string;
+  blockId?: string;
   module: string;
   call: string;
   timestamp: string;
@@ -41,24 +41,123 @@ export interface Extrinsic {
   isSigned: boolean;
   extrinsicIndex: number;
   hash: string;
-  signer: string;
   signature: string;
-  fees: string | null;
+  signer: string;
   feesRounded: number | null;
   nonce: number;
+  nbEvents: number;
   argsName: Record<string, unknown>;
   argsValue: Record<string, unknown>;
-  nbEvents: number;
+  block: {
+    id: string;
+    number: number;
+    timestamp: string;
+  };
 }
 
+// Event related types
+export interface EventNode {
+  id: string;
+  blockId: string;
+  module: string;
+  event: string;
+  eventIndex: number;
+  call: string;
+  argsName: Record<string, unknown>;
+  argsValue: Record<string, unknown>;
+  blockHeight: number;
+  timestamp: string;
+}
+
+// Transfer related types
+export interface TransferEntityNode {
+  id: string;
+  blockId: string;
+  blockHash: string;
+  from: string;
+  to: string;
+  currency: string;
+  amount: string;
+  amountRounded: number;
+  timestamp: string;
+  extrinsicId?: string;
+}
+
+// Data submission related types
+export interface DataSubmissionNode {
+  id: string;
+  timestamp: string;
+  byteSize: number;
+  appId: number;
+  signer: string;
+  fees: number;
+  feesPerMb: number;
+  extrinsicId?: string;
+}
+
+// Block extension types
+export interface HeaderExtensionNode {
+  id: string;
+  version: string;
+  commitments: {
+    nodes: CommitmentNode[];
+  };
+}
+
+export interface CommitmentNode {
+  id: string;
+  rows: number;
+  cols: number;
+  dataRoot: string;
+  commitment: string;
+}
+
+export interface LogNode {
+  id: string;
+  type: string;
+  engine: string;
+  data: string;
+}
+
+// Response for related data
+export interface ExtrinsicRelatedDataResponse {
+  events: {
+    nodes: EventNode[];
+  };
+  transferEntities: {
+    nodes: TransferEntityNode[];
+  };
+  dataSubmissions: {
+    nodes: DataSubmissionNode[];
+  };
+}
+
+// Extended extrinsic with relations
 export interface ExtrinsicWithRelations extends Extrinsic {
   block: {
+    id: string;
     number: number;
     timestamp: string;
     hash: string;
+    parentHash: string;
+    stateRoot: string;
+    extrinsicsRoot: string;
+    runtimeVersion: number;
+    nbExtrinsics: number;
+    nbEvents: number;
+    author: string;
+    sessionId: number;
+    headerExtensions: {
+      nodes: HeaderExtensionNode[];
+    };
+    logs: {
+      nodes: LogNode[];
+    };
   };
-  events: {
-    nodes: Event[];
+  relatedData?: {
+    events: EventNode[];
+    transfers: TransferEntityNode[];
+    dataSubmissions: DataSubmissionNode[];
   };
 }
 

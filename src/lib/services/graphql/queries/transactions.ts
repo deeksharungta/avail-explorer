@@ -42,34 +42,68 @@ export const GET_TRANSACTION_BY_HASH = gql`
         blockHeight
         success
         isSigned
-        extrinsicIndex
-        hash
         timestamp
         signer
         signature
-        fees
         feesRounded
         nonce
-        argsName
-        argsValue
         nbEvents
         block {
+          id
           number
           timestamp
-          hash
         }
-        events: events {
-          nodes {
-            id
-            module
-            event
-            blockHeight
-            eventIndex
-            argsName
-            argsValue
-            timestamp
-          }
-        }
+      }
+    }
+  }
+`;
+
+// Get related data using the extrinsic ID retrieved from the first query
+export const GET_TRANSACTION_RELATED_DATA = gql`
+  query GetTransactionRelatedData($extrinsicId: String!) {
+    events(
+      filter: { extrinsicId: { equalTo: $extrinsicId } }
+      orderBy: EVENT_INDEX_ASC
+    ) {
+      nodes {
+        id
+        blockId
+        module
+        event
+        eventIndex
+        call
+        argsName
+        argsValue
+        blockHeight
+        timestamp
+      }
+    }
+
+    # Get transfer data if this extrinsic involves a transfer
+    transferEntities(filter: { extrinsicId: { equalTo: $extrinsicId } }) {
+      nodes {
+        id
+        blockId
+        blockHash
+        from
+        to
+        currency
+        amount
+        amountRounded
+        timestamp
+      }
+    }
+
+    # Get data submissions if this is a data submission extrinsic
+    dataSubmissions(filter: { extrinsicId: { equalTo: $extrinsicId } }) {
+      nodes {
+        id
+        timestamp
+        byteSize
+        appId
+        signer
+        fees
+        feesPerMb
       }
     }
   }
