@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -16,6 +16,7 @@ import WalletConnect from '../wallet/WalletConnect';
 import { AlertCircle } from 'lucide-react';
 import { useActionsStore } from '@/stores/actionStore';
 import { WalletBalance } from '@/types/wallet';
+import { isValidSubstrateAddress } from '@/lib/validators/transferValidation';
 
 type ActionType = 'transfer' | 'data-submit';
 
@@ -35,8 +36,7 @@ interface FormErrors {
 const validators = {
   recipient: (value: string): string | undefined => {
     if (!value) return 'Recipient address is required';
-    if (!value.startsWith('5')) return 'Invalid address format';
-    return undefined;
+    if (!isValidSubstrateAddress(value)) return 'Invalid address';
   },
 
   amount: (
@@ -101,6 +101,58 @@ export function ActionForm() {
   const { account, balance } = useWalletStore();
   const { transferAvail, submitData, isProcessing, error } = useActionsStore();
 
+  // Get active fields based on action type
+  const getActiveFields = (): (keyof FormValues)[] => {
+    return actionType === 'transfer' ? ['recipient', 'amount'] : ['data'];
+  };
+
+  // Validate form and update form validity state
+  const validateForm = (formValues = values, formTouched = touched) => {
+    const fieldsToValidate = getActiveFields();
+    const newErrors: FormErrors = {};
+    let valid = true;
+
+    // Only validate fields that have been touched
+    fieldsToValidate.forEach((field) => {
+      // Skip validation for untouched fields
+      if (!formTouched[field]) return;
+
+      // Validate each field and collect errors
+      let errorMessage;
+      switch (field) {
+        case 'recipient':
+          errorMessage = validators.recipient(formValues.recipient);
+          break;
+        case 'amount':
+          errorMessage = validators.amount(formValues.amount, balance);
+          break;
+        case 'data':
+          errorMessage = validators.data(formValues.data);
+          break;
+      }
+
+      if (errorMessage) {
+        newErrors[field] = errorMessage;
+        valid = false;
+      }
+    });
+
+    setErrors(newErrors);
+    setIsFormValid(
+      valid &&
+        Object.keys(formTouched).length > 0 &&
+        fieldsToValidate.every((field) => formTouched[field])
+    );
+    return newErrors;
+  };
+
+  // Update form validity whenever fields or touched state changes
+  useEffect(() => {
+    validateForm();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values, touched, actionType, balance]);
+
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -110,119 +162,45 @@ export function ActionForm() {
       [id]: value,
     }));
 
-    setTouched((prev) => ({
-      ...prev,
-      [id]: true,
-    }));
-
-    // Clear error when typing
-    if (errors[id as keyof FormErrors]) {
-      setErrors((prev) => ({
+    // Mark field as touched if it wasn't already
+    if (!touched[id]) {
+      setTouched((prev) => ({
         ...prev,
-        [id]: undefined,
+        [id]: true,
       }));
     }
-
-    // Run form validation after a short delay to avoid excessive validation during typing
-    setTimeout(() => {
-      validateForm();
-    }, 100);
   };
 
   // Handle field blur for validation
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { id } = e.target;
 
+    // Mark field as touched
     setTouched((prev) => ({
       ...prev,
       [id]: true,
     }));
-
-    // Validate single field
-    validateField(id as keyof FormValues);
-
-    // Check overall form validity
-    validateForm();
-  };
-
-  // Get active fields based on action type
-  const getActiveFields = (): (keyof FormValues)[] => {
-    return actionType === 'transfer' ? ['recipient', 'amount'] : ['data'];
-  };
-
-  // Validate a single field
-  const validateField = (field: keyof FormValues) => {
-    // Skip validation for fields not relevant to current action type
-    if (!getActiveFields().includes(field)) return true;
-
-    const newErrors = { ...errors };
-    let errorMessage: string | undefined;
-
-    switch (field) {
-      case 'recipient':
-        errorMessage = validators.recipient(values.recipient);
-        break;
-      case 'amount':
-        errorMessage = validators.amount(values.amount, balance);
-        break;
-      case 'data':
-        errorMessage = validators.data(values.data);
-        break;
-    }
-
-    if (errorMessage) {
-      newErrors[field] = errorMessage;
-    } else {
-      delete newErrors[field];
-    }
-
-    setErrors(newErrors);
-    return !errorMessage;
-  };
-
-  // Validate all form fields
-  const validateForm = () => {
-    const fieldsToValidate = getActiveFields();
-    const newErrors: FormErrors = {};
-
-    // Mark all relevant fields as touched
-    const newTouched = { ...touched };
-    fieldsToValidate.forEach((field) => {
-      newTouched[field] = true;
-
-      // Validate each field and collect errors
-      const errorMessage = (() => {
-        switch (field) {
-          case 'recipient':
-            return validators.recipient(values.recipient);
-          case 'amount':
-            return validators.amount(values.amount, balance);
-          case 'data':
-            return validators.data(values.data);
-          default:
-            return undefined;
-        }
-      })();
-
-      if (errorMessage) {
-        newErrors[field] = errorMessage;
-      }
-    });
-
-    setTouched(newTouched);
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate form
-    if (!validateForm()) return;
+    // Mark all fields as touched
+    const allTouched = getActiveFields().reduce((acc, field) => {
+      acc[field] = true;
+      return acc;
+    }, {} as Record<string, boolean>);
 
-    // Open confirmation modal
-    setIsConfirmModalOpen(true);
+    setTouched(allTouched);
+
+    // Validate form with all fields marked as touched
+    const newErrors = validateForm(values, allTouched);
+
+    // Open confirmation modal if no errors
+    if (Object.keys(newErrors).length === 0) {
+      setIsConfirmModalOpen(true);
+    }
   };
 
   // Handle action type change

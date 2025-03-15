@@ -42,16 +42,23 @@ export const validateTransfer = (
 
 //Validate recepient address
 export const isValidSubstrateAddress = (address: string): boolean => {
+  if (!address) return false;
+
+  // Check if address starts with correct prefix for Substrate (usually '5')
+  if (!address.startsWith('5')) return false;
+
   try {
     // Attempt to decode the address
     const decoded = isHex(address) ? hexToU8a(address) : decodeAddress(address);
 
-    // Attempt to encode back to ensure validity
+    if (decoded.length < 32 || decoded.length > 33) {
+      return false;
+    }
+
     encodeAddress(decoded);
 
     return true;
-  } catch (error) {
-    console.error(error);
+  } catch {
     return false;
   }
 };
