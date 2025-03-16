@@ -41,5 +41,6 @@ export function useLatestTransactions(params = { first: 10 }) {
     refetchInterval: 20 * 1000, // Poll every 20 seconds
     refetchOnWindowFocus: false,
     staleTime: 10 * 1000,
+    retry: 3,
   });
 }

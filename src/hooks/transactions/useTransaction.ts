@@ -22,5 +22,6 @@ export function useTransaction(
     queryKey: ['transaction', hash],
     queryFn: () => fetchTransactionByHash(hash as string),
     enabled: !!hash,
+    retry: 3,
   });
 }

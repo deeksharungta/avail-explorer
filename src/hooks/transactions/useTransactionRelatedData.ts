@@ -32,5 +32,6 @@ export function useTransactionRelatedData(
     queryKey: ['transaction-related-data', id],
     queryFn: () => fetchTransactionRelatedData(id as string),
     enabled: !!id,
+    retry: 3,
   });
 }
