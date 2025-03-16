@@ -18,7 +18,7 @@ const DUMMY_TRANSACTIONS = {
         .fill(0)
         .map(() => Math.floor(Math.random() * 16).toString(16))
         .join('')}`,
-      success: Math.random() > 0.2, // 80% success rate for dummy data
+      success: Math.random() > 0.2,
     })),
 };
 

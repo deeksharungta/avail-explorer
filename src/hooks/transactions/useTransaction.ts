@@ -22,6 +22,5 @@ export function useTransaction(
     queryKey: ['transaction', hash],
     queryFn: () => fetchTransactionByHash(hash as string),
     enabled: !!hash,
-    staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
   });
 }

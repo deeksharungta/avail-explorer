@@ -32,6 +32,5 @@ export function useTransactionRelatedData(
     queryKey: ['transaction-related-data', id],
     queryFn: () => fetchTransactionRelatedData(id as string),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
   });
 }

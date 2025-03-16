@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
-import { useWallet } from '@/hooks/useWallet';
-import { formatBalance } from '@/lib/wallet/avail-connection';
+import { formatBalance } from '@/lib/wallet/walletConnection';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,16 +9,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Copy, LogOut } from 'lucide-react';
 import { copyToClipboard, formatAddress } from '@/lib/utils';
+import { useWalletStore } from '@/stores/walletStore';
 
 export default function WalletConnect() {
   const {
     account,
-    wallet,
     balance,
+    wallet,
     isLoading,
     connectWallet,
     disconnectWallet,
-  } = useWallet();
+  } = useWalletStore();
 
   return (
     <div className='relative'>

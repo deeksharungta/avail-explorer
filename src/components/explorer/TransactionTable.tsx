@@ -32,68 +32,6 @@ interface StatusIndicatorProps {
   status: Transaction['status'];
 }
 
-// Skeleton loader for transaction table
-const TransactionTableSkeleton = () => {
-  return (
-    <div>
-      <div className='flex justify-between items-center mb-4'>
-        <Skeleton className='h-8 w-48' />
-        <Skeleton className='h-10 w-24' />
-      </div>
-
-      <div className='overflow-x-auto rounded-md border border-white/10 overflow-hidden'>
-        <Table>
-          <TableHeader>
-            <TableRow className='border-b border-white/10 bg-secondary'>
-              <TableHead className='text-white/10 font-medium'>
-                <Skeleton className='h-4 w-24' />
-              </TableHead>
-              <TableHead className='text-white/10 font-medium'>
-                <Skeleton className='h-4 w-20' />
-              </TableHead>
-              <TableHead className='text-white/10 font-medium'>
-                <Skeleton className='h-4 w-20' />
-              </TableHead>
-              <TableHead className='text-white/10 font-medium'>
-                <Skeleton className='h-4 w-24' />
-              </TableHead>
-              <TableHead className='text-white/10 font-medium'>
-                <Skeleton className='h-4 w-20' />
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array(5)
-              .fill(0)
-              .map((_, index) => (
-                <TableRow
-                  key={index}
-                  className='border-b border-white/10 hover:bg-secondary bg-black transition-colors'
-                >
-                  <TableCell>
-                    <Skeleton className='h-6 w-32' />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className='h-6 w-24' />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className='h-6 w-20' />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className='h-6 w-28' />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className='h-6 w-24' />
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
-};
-
 export default function TransactionTable() {
   const [currentPage, setCurrentPage] = useState(0);
   const ITEMS_PER_PAGE = 5;
@@ -333,4 +271,66 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status }) => {
     default:
       return <span>{status}</span>;
   }
+};
+
+// Skeleton loader for transaction table
+const TransactionTableSkeleton = () => {
+  return (
+    <div>
+      <div className='flex justify-between items-center mb-4'>
+        <Skeleton className='h-8 w-48' />
+        <Skeleton className='h-10 w-24' />
+      </div>
+
+      <div className='overflow-x-auto rounded-md border border-white/10 overflow-hidden'>
+        <Table>
+          <TableHeader>
+            <TableRow className='border-b border-white/10 bg-secondary'>
+              <TableHead className='text-white/10 font-medium'>
+                <Skeleton className='h-4 w-24' />
+              </TableHead>
+              <TableHead className='text-white/10 font-medium'>
+                <Skeleton className='h-4 w-20' />
+              </TableHead>
+              <TableHead className='text-white/10 font-medium'>
+                <Skeleton className='h-4 w-20' />
+              </TableHead>
+              <TableHead className='text-white/10 font-medium'>
+                <Skeleton className='h-4 w-24' />
+              </TableHead>
+              <TableHead className='text-white/10 font-medium'>
+                <Skeleton className='h-4 w-20' />
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array(5)
+              .fill(0)
+              .map((_, index) => (
+                <TableRow
+                  key={index}
+                  className='border-b border-white/10 hover:bg-secondary bg-black transition-colors'
+                >
+                  <TableCell>
+                    <Skeleton className='h-6 w-32' />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className='h-6 w-24' />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className='h-6 w-20' />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className='h-6 w-28' />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className='h-6 w-24' />
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
 };

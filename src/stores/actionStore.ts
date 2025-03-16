@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { useWalletStore } from '@/stores/walletStore';
-import {
-  convertToSmallestUnit,
-  performBalanceTransfer,
-} from '@/lib/services/actions/transferBalance';
+import { performBalanceTransfer } from '@/lib/services/actions/transferBalance';
 import { postData } from '@/lib/services/actions/postData';
-import { validateTransfer } from '@/lib/validators/transferValidation';
+import {
+  validateTransfer,
+  validateDataSubmission,
+  convertToSmallestUnit,
+} from '@/lib/validators/formValidation';
 import { useEffect } from 'react';
 
 export interface ActionRecord {
@@ -21,7 +22,7 @@ export interface ActionRecord {
   transactionHash?: string;
   blockHash?: string;
   error?: string;
-  walletAddress?: string; // Add wallet address to track which wallet performed the action
+  walletAddress?: string;
 }
 
 // Helper functions for localStorage
@@ -118,12 +119,37 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
     set({ error: null, isProcessing: true });
 
     try {
-      const { value: amountBN } = convertToSmallestUnit(amount);
-      if (!amountBN) return;
+      const { value: amountBN, success } = convertToSmallestUnit(amount);
+
+      if (!success || !amountBN) {
+        const error = 'Invalid amount format';
+        const failedAction: ActionRecord = {
+          id: `action-${Date.now()}`,
+          type: 'transfer',
+          details: { recipient, amount },
+          timestamp: Date.now(),
+          status: 'failed',
+          error,
+          walletAddress: address,
+        };
+
+        set((state) => {
+          const updatedActions = [failedAction, ...state.actions];
+          saveActionsToStorage(address, updatedActions);
+          return {
+            error,
+            actions: updatedActions,
+            currentWalletAddress: address,
+          };
+        });
+        return;
+      }
+
+      // Validate the transfer
       const validationErrors = validateTransfer(
         recipient,
         amountBN.toString(),
-        balance?.free || ''
+        balance?.free || '0'
       );
 
       if (Object.keys(validationErrors).length > 0) {
@@ -217,6 +243,8 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
             (result.status !== 'success' ? 'Transfer failed' : undefined),
         });
       }
+
+      return pendingAction;
     } catch (err) {
       const { account } = useWalletStore.getState();
       const address = account?.address;
@@ -240,6 +268,8 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
           currentWalletAddress: address,
         };
       });
+
+      return failedAction;
     } finally {
       set({ isProcessing: false });
     }
@@ -258,8 +288,11 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
     set({ error: null, isProcessing: true });
 
     try {
-      if (!data || data.trim().length === 0) {
-        const error = 'Data is required';
+      // Validate data submission
+      const validationErrors = validateDataSubmission(data);
+
+      if (Object.keys(validationErrors).length > 0) {
+        const error = JSON.stringify(validationErrors);
         const failedAction: ActionRecord = {
           id: `action-${Date.now()}`,
           type: 'data-submit',
@@ -279,7 +312,7 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
             currentWalletAddress: address,
           };
         });
-        return;
+        return failedAction;
       }
 
       if (!wallet || !account || !address) {
@@ -301,7 +334,7 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
             actions: updatedActions,
           };
         });
-        return;
+        return failedAction;
       }
 
       // First create a pending action
@@ -345,6 +378,8 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
               : undefined),
         });
       }
+
+      return pendingAction;
     } catch (err) {
       const { account } = useWalletStore.getState();
       const address = account?.address;
@@ -369,6 +404,8 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
           currentWalletAddress: address,
         };
       });
+
+      return failedAction;
     } finally {
       set({ isProcessing: false });
     }

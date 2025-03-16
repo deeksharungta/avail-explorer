@@ -15,8 +15,7 @@ import { ActionConfirmModal } from './ActionConfirmModal';
 import WalletConnect from '../wallet/WalletConnect';
 import { AlertCircle } from 'lucide-react';
 import { useActionsStore } from '@/stores/actionStore';
-import { WalletBalance } from '@/types/wallet';
-import { isValidSubstrateAddress } from '@/lib/validators/transferValidation';
+import { ValidationErrors, validators } from '@/lib/validators/formValidation';
 
 type ActionType = 'transfer' | 'data-submit';
 
@@ -26,64 +25,6 @@ interface FormValues {
   data: string;
 }
 
-interface FormErrors {
-  recipient?: string;
-  amount?: string;
-  data?: string;
-}
-
-// Field validator functions for cleaner code
-const validators = {
-  recipient: (value: string): string | undefined => {
-    if (!value) return 'Recipient address is required';
-    if (!isValidSubstrateAddress(value)) return 'Invalid address';
-  },
-
-  amount: (
-    value: string,
-    balance: WalletBalance | null
-  ): string | undefined => {
-    if (!value) return 'Amount is required';
-
-    const amountNum = parseFloat(value);
-    if (isNaN(amountNum) || amountNum <= 0)
-      return 'Amount must be a positive number';
-
-    if (balance?.free) {
-      try {
-        // First convert to a string with the decimal point
-        const amountStr = amountNum.toString();
-
-        // Handle the decimal places correctly
-        const [whole, decimalPart] = amountStr.includes('.')
-          ? amountStr.split('.')
-          : [amountStr, ''];
-
-        // Pad the decimal part to 18 places or truncate if longer
-        const decimal = decimalPart.padEnd(18, '0').slice(0, 18);
-
-        // Create the string representation without decimal point
-        const amountInSmallestUnit = whole + decimal;
-
-        if (BigInt(amountInSmallestUnit) > BigInt(balance.free)) {
-          return 'Insufficient balance';
-        }
-      } catch (e) {
-        console.error('Error comparing balance:', e);
-        return 'Error validating amount';
-      }
-    }
-
-    return undefined;
-  },
-
-  data: (value: string): string | undefined => {
-    if (!value) return 'Data is required';
-    if (value.length > 1024) return 'Data must be less than 1024 characters';
-    return undefined;
-  },
-};
-
 export function ActionForm() {
   // State for form inputs
   const [actionType, setActionType] = useState<ActionType>('transfer');
@@ -92,7 +33,7 @@ export function ActionForm() {
     amount: '',
     data: '',
   });
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isFormValid, setIsFormValid] = useState(false);
@@ -109,7 +50,7 @@ export function ActionForm() {
   // Validate form and update form validity state
   const validateForm = (formValues = values, formTouched = touched) => {
     const fieldsToValidate = getActiveFields();
-    const newErrors: FormErrors = {};
+    const newErrors: ValidationErrors = {};
     let valid = true;
 
     // Only validate fields that have been touched
@@ -149,7 +90,6 @@ export function ActionForm() {
   // Update form validity whenever fields or touched state changes
   useEffect(() => {
     validateForm();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values, touched, actionType, balance]);
 

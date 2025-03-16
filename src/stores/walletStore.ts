@@ -2,11 +2,7 @@ import { create } from 'zustand';
 import { ApiPromise } from '@polkadot/api';
 import { WalletBalance, WalletInterface } from '@/types/wallet';
 import { initOnboard } from '@/lib/wallet/onboard';
-import {
-  connectToAvail,
-  fetchBalance,
-  formatBalance as formatBalanceUtil,
-} from '@/lib/wallet/avail-connection';
+import { connectToAvail, fetchBalance } from '@/lib/wallet/walletConnection';
 import { Account } from '@subwallet-connect/core/dist/types';
 import { useEffect } from 'react';
 import { useActionsStore } from './actionStore';
@@ -23,7 +19,6 @@ interface WalletState {
   // Actions
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
-  formatBalance: (balance: string) => string;
 }
 
 export const useWalletStore = create<WalletState>((set, get) => ({
@@ -116,8 +111,6 @@ export const useWalletStore = create<WalletState>((set, get) => ({
       error: null,
     });
   },
-
-  formatBalance: (balance: string) => formatBalanceUtil(balance),
 }));
 
 export const useWalletInit = () => {
