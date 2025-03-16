@@ -57,7 +57,6 @@ npm run dev
 ```
 src/
 ├── app/                 # Next.js App Router pages
-│   ├── api/             # API routes
 │   ├── explorer/        # Explorer pages
 │   └── layout.tsx       # Root layout
 ├── components/          # React components
@@ -68,7 +67,6 @@ src/
 │   ├── ui/              # UI components (shadcn/ui)
 │   └── wallet/          # Wallet components
 ├── hooks/               # Custom React hooks
-│   ├── account/         # Account-related hooks
 │   ├── stats/           # Statistics hooks
 │   └── transactions/    # Transaction hooks
 ├── lib/                 # Utility functions and services
@@ -76,6 +74,7 @@ src/
 │   ├── config/          # Configuration files
 │   ├── services/        # Service utilities (GraphQL, actions)
 │   ├── utils.ts         # General utility functions
+│   ├── error.ts         # Error parsing and handling utilities
 │   ├── validators/      # Form validators
 │   └── wallet/          # Wallet utilities
 ├── stores/              # Zustand store definitions
