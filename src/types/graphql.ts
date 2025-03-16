@@ -1,33 +1,3 @@
-// Common types used across multiple domains
-export interface PageInfo {
-  hasNextPage: boolean;
-  endCursor: string | null;
-  hasPreviousPage?: boolean;
-  startCursor?: string | null;
-}
-
-export interface NodeConnection<T> {
-  nodes: T[];
-  pageInfo: PageInfo;
-  totalCount: number;
-}
-
-// Block related types
-export interface Block {
-  id: string;
-  number: number;
-  hash: string;
-  timestamp: string;
-  parentHash: string;
-  stateRoot: string;
-  extrinsicsRoot: string;
-  author: string | null;
-  runtimeVersion: number;
-  nbExtrinsics: number;
-  nbEvents: number;
-  sessionId: number | null;
-}
-
 // Transaction (Extrinsic) related types
 export interface Extrinsic {
   id: string;
@@ -173,10 +143,6 @@ export interface ExtrinsicWithRelations extends Extrinsic {
   };
 }
 
-export interface ExtrinsicsResponse {
-  extrinsics: NodeConnection<Extrinsic>;
-}
-
 export interface ExtrinsicResponse {
   extrinsics: {
     nodes: ExtrinsicWithRelations[];
@@ -198,57 +164,13 @@ export interface ExtrinsicStatsResponse {
   };
 }
 
-// Account related types
-export interface Account {
-  id: string;
-  validator: boolean;
-  validatorSessionParticipated: number;
-  amount: string;
-  amountFrozen: string;
-  amountTotal: string;
-  amountRounded: number;
-  amountFrozenRounded: number;
-  amountTotalRounded: number;
-  createdAt: string;
-  updatedAt: string;
-  timestampCreation: string;
-}
-
-export interface AccountResponse {
-  accountEntity: Account | null;
-}
-
-export interface Transfer {
-  id: string;
-  blockId: string;
-  blockHash: string;
-  extrinsicId: string;
-  timestamp: string;
-  from: string;
-  to: string;
-  currency: string;
-  amount: string;
-  amountRounded: number;
-}
-
-export interface AccountTransfersResponse {
-  fromTransfers: NodeConnection<Transfer>;
-  toTransfers: NodeConnection<Transfer>;
-}
-
-export interface TransformedAccountTransfers {
-  sent: NodeConnection<Transfer>;
-  received: NodeConnection<Transfer>;
-}
-
-export interface AccountTransactionsResponse {
-  extrinsics: NodeConnection<Extrinsic>;
-}
-
 // Chain statistics types
 export interface LatestBlockResponse {
   latestBlock: {
-    nodes: Pick<Block, 'number' | 'timestamp'>[];
+    nodes: {
+      number: number;
+      timestamp: string;
+    }[];
   };
 }
 
