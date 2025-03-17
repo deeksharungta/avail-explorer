@@ -13,6 +13,12 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { formatAddress, getAccountLink } from '@/lib/utils';
 import { ActionRecord } from '@/stores/actionStore';
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@radix-ui/react-tooltip';
 
 interface ActionConfirmModalProps {
   isOpen: boolean;
@@ -75,9 +81,18 @@ export function ActionConfirmModal({
     return (
       <div className='flex justify-between items-center'>
         <span className='text-sm text-white/80'>Data</span>
-        <pre className='font-medium text-sm break-all whitespace-pre-wrap'>
-          {details.data}
-        </pre>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <pre className='font-medium text-sm break-all truncate max-w-52'>
+                {details.data}
+              </pre>
+            </TooltipTrigger>
+            <TooltipContent className='bg-secondary border rounded-md border-white/10 p-2 text-white max-w-xs z-40'>
+              <p className='text-sm'>{details.data}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     );
   };
