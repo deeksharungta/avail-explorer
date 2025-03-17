@@ -29,7 +29,7 @@ import {
   TooltipContent,
 } from '@radix-ui/react-tooltip';
 import { parseError } from '@/lib/error';
-import { getTransactionLink } from '@/lib/utils';
+import { formatTimestamp, getTransactionLink } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -61,16 +61,6 @@ export function ActionHistory() {
   const truncate = (str: string, length = 10) => {
     if (!str) return '';
     return str.length > length ? `${str.slice(0, 6)}...${str.slice(-4)}` : str;
-  };
-
-  // Format timestamp to show time
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
   };
 
   // Render transaction type with badge
@@ -266,7 +256,7 @@ export function ActionHistory() {
                   <TableCell>{renderTypeWithBadge(action.type)}</TableCell>
                   <TableCell>{renderValue(action)}</TableCell>
                   <TableCell className='text-white'>
-                    {formatTime(action.timestamp)}
+                    {formatTimestamp(action.timestamp)}
                   </TableCell>
                   <TableCell>
                     {renderStatus(action.status, action?.error)}

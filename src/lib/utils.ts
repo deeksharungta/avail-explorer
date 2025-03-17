@@ -67,6 +67,24 @@ export function formatDateLocalized(dateString: string): string {
   }
 }
 
+// Converts a Unix timestamp to human-readable format: DD/MM/YYYY, HH:MM:SS
+export function formatTimestamp(timestamp: number) {
+  const date = new Date(timestamp);
+
+  // Extract date components
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  // Extract time components
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  // Combine into the specified format: DD/MM/YYYY, HH:MM:SS
+  return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
+}
+
 export const getTransactionLink = (hash: string) => {
   return `${
     process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000'
