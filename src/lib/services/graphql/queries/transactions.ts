@@ -3,8 +3,47 @@ import { gql } from 'graphql-request';
 // Get the latest transactions with pagination
 export const GET_LATEST_TRANSACTIONS = gql`
   query GetLatestTransactions($first: Int!, $after: Cursor) {
-    extrinsics(first: $first, after: $after, orderBy: TIMESTAMP_DESC) {
+    extrinsics(
+      first: $first
+      after: $after
+      orderBy: TIMESTAMP_DESC
+      filter: {
+        # Filter out timestamp.set transactions
+        or: [
+          {
+            # Include specific interesting modules
+            module: {
+              in: [
+                "balances"
+                "staking"
+                "identity"
+                "assets"
+                "contracts"
+                "utility"
+                "multisig"
+                "proxy"
+                "council"
+                "democracy"
+                "treasury"
+                "elections"
+                "dataAvailability"
+              ]
+            }
+          }
+          {
+            # Include interesting system calls
+            and: [
+              { module: { equalTo: "system" } }
+              { call: { in: ["remark", "setCode"] } }
+            ]
+          }
+        ]
+        # Exclude timestamp module entirely
+        module: { notEqualTo: "timestamp" }
+      }
+    ) {
       nodes {
+        blockId
         module
         call
         timestamp

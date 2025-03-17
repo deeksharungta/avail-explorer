@@ -1,6 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLatestTransactions } from '@/hooks/transactions/useLatestTransactions';
-import { RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -11,8 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import AnimatedBlockNumber from './AnimatedBlockNumber';
-import AnimatedTransactionRow from './AnimatedTransactionRow';
+import { formatDate, getTransactionLink } from '@/lib/utils';
 
 export interface Transaction {
   hash: string;
@@ -20,108 +26,28 @@ export interface Transaction {
   module: string;
   status: 'completed' | 'pending' | 'failed' | string;
   timestamp: string;
-  blockNumber?: number;
-  txHash?: string;
-  call?: string;
-  success?: boolean;
+  blockId: string; // Added blockId to the interface
+}
+
+interface StatusIndicatorProps {
+  status: Transaction['status'];
 }
 
 export default function TransactionTable() {
   const [currentPage, setCurrentPage] = useState(0);
-  const [latestBlockNumber, setLatestBlockNumber] = useState<number | null>(
-    null
-  );
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [newTransactionHashes, setNewTransactionHashes] = useState<Set<string>>(
-    new Set()
-  );
-  const latestBlockRef = useRef<number | null>(null);
-  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const prevTransactionsRef = useRef<string[]>([]);
   const ITEMS_PER_PAGE = 5;
 
   const { data, isLoading, isError, isFetching, refetch } =
     useLatestTransactions();
 
-  // Reset to first page when new data is fetched and clear refresh state
+  // Reset to first page when new data is fetched
   useEffect(() => {
     if (data) {
       setCurrentPage(0);
-
-      // Set a delay before turning off the refreshing state
-      // to give users visual feedback that something happened
-      if (isRefreshing) {
-        const timer = setTimeout(() => {
-          setIsRefreshing(false);
-        }, 1000);
-        return () => clearTimeout(timer);
-      }
     }
-  }, [data, isRefreshing]);
-
-  // Update the block number when new transactions come in
-  useEffect(() => {
-    if (data?.nodes && data.nodes.length > 0) {
-      // Track new transactions
-      const currentTxHashes = data.nodes
-        .map((tx) => tx.txHash || '')
-        .filter((hash) => hash !== '');
-
-      // Check if there are new transactions by comparing with previous ones
-      if (prevTransactionsRef.current.length > 0) {
-        const newHashes = new Set<string>();
-
-        currentTxHashes.forEach((hash) => {
-          if (!prevTransactionsRef.current.includes(hash)) {
-            newHashes.add(hash);
-          }
-        });
-
-        if (newHashes.size > 0) {
-          setNewTransactionHashes(newHashes);
-
-          // Clear marked transactions after some time
-          setTimeout(() => {
-            setNewTransactionHashes(new Set());
-          }, 5000);
-        }
-      }
-
-      // Update reference for next comparison
-      prevTransactionsRef.current = currentTxHashes;
-
-      // Get the highest block number from the transactions
-      const highestBlockNumber = Math.max(
-        ...data.nodes
-          .filter((tx) => tx.blockNumber !== undefined)
-          .map((tx) => tx.blockNumber || 0)
-      );
-
-      if (
-        highestBlockNumber > 0 &&
-        (!latestBlockRef.current || highestBlockNumber > latestBlockRef.current)
-      ) {
-        // Show refreshing indicator
-        setIsRefreshing(true);
-        setLatestBlockNumber(highestBlockNumber);
-        latestBlockRef.current = highestBlockNumber;
-
-        // Clear any existing timer
-        if (refreshTimerRef.current) {
-          clearTimeout(refreshTimerRef.current);
-        }
-
-        // Set timer to hide the refreshing indicator after 2 seconds
-        refreshTimerRef.current = setTimeout(() => {
-          setIsRefreshing(false);
-          refreshTimerRef.current = null;
-        }, 2000);
-      }
-    }
-  }, [data?.nodes]);
+  }, [data]);
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
     refetch();
     // Reset to first page on manual refresh
     setCurrentPage(0);
@@ -179,23 +105,14 @@ export default function TransactionTable() {
           <h2 className='text-xl font-semibold text-white'>
             Recent Transactions
           </h2>
-          <div className='flex items-center gap-4'>
-            {latestBlockNumber !== null && (
-              <AnimatedBlockNumber value={latestBlockNumber} />
-            )}
-            <Button
-              variant='ghost'
-              className='flex items-center text-primary hover:text-primary hover:bg-white/10'
-              onClick={handleRefresh}
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${
-                  isRefreshing || isFetching ? 'animate-spin' : ''
-                }`}
-              />
-              {isRefreshing || isFetching ? 'Refreshing...' : 'Refresh'}
-            </Button>
-          </div>
+          <Button
+            variant='ghost'
+            className='flex items-center text-primary hover:text-primary hover:bg-white/10'
+            onClick={handleRefresh}
+          >
+            <RefreshCw className='h-4 w-4' />
+            Refresh
+          </Button>
         </div>
 
         <div className='p-8 text-center bg-secondary/20 rounded-md border border-white/10'>
@@ -221,41 +138,32 @@ export default function TransactionTable() {
         <h2 className='text-xl font-semibold text-white'>
           Recent Transactions
         </h2>
-        <div className='flex items-center gap-4'>
-          {latestBlockNumber !== null && (
-            <AnimatedBlockNumber value={latestBlockNumber} />
-          )}
-          <Button
-            variant='ghost'
-            className='flex items-center text-primary hover:text-primary hover:bg-[#1a1a1a] cursor-pointer'
-            onClick={handleRefresh}
-            disabled={isFetching}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${
-                isRefreshing || isFetching ? 'animate-spin' : ''
-              }`}
-            />
-            {isRefreshing || isFetching ? 'Refreshing...' : 'Refresh'}
-          </Button>
-        </div>
+        <Button
+          variant='ghost'
+          className='flex items-center text-primary hover:text-primary hover:bg-[#1a1a1a] cursor-pointer'
+          onClick={handleRefresh}
+          disabled={isFetching}
+        >
+          <RefreshCw
+            className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`}
+          />
+          {isFetching ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
 
       <div className='overflow-x-auto rounded-md border border-white/10 overflow-hidden'>
         <Table>
           <TableHeader>
             <TableRow className='border-b border-white/10 bg-secondary'>
-              <TableHead className='text-white/80 font-medium'>
-                BLOCK #
-              </TableHead>
-              <TableHead className='text-white/80 font-medium mr-2'>
-                HASH
-              </TableHead>
+              <TableHead className='text-white/80 font-medium'>HASH</TableHead>
               <TableHead className='text-white/80 font-medium'>
                 METHOD
               </TableHead>
               <TableHead className='text-white/80 font-medium'>
                 MODULE
+              </TableHead>
+              <TableHead className='text-white/80 font-medium'>
+                BLOCK ID
               </TableHead>
               <TableHead className='text-white/80 font-medium'>
                 TIMESTAMP
@@ -267,13 +175,39 @@ export default function TransactionTable() {
           </TableHeader>
           <TableBody>
             {currentTransactions.map((tx, index) => (
-              <AnimatedTransactionRow
+              <TableRow
+                onClick={
+                  tx.txHash
+                    ? () => {
+                        window.open(
+                          getTransactionLink(tx.txHash || ''),
+                          '_blank'
+                        );
+                      }
+                    : undefined
+                }
                 key={`${tx.txHash || 'unknown'}-${startIndex + index}`}
-                tx={tx}
-                index={index}
-                startIndex={startIndex}
-                isNew={tx.txHash ? newTransactionHashes.has(tx.txHash) : false}
-              />
+                className='border-b border-white/10 hover:bg-secondary bg-black transition-colors cursor-pointer'
+              >
+                <TableCell className='font-mono text-white truncate max-w-24'>
+                  {tx.txHash}
+                </TableCell>
+                <TableCell className='text-white'>{tx.call || 'N/A'}</TableCell>
+                <TableCell className='text-white'>
+                  {tx.module || 'N/A'}
+                </TableCell>
+                <TableCell className='font-mono text-white truncate max-w-24'>
+                  {tx.blockId || 'N/A'}
+                </TableCell>
+                <TableCell className='text-white whitespace-nowrap'>
+                  {formatDate(tx.timestamp)}
+                </TableCell>
+                <TableCell>
+                  <StatusIndicator
+                    status={tx.success ? 'completed' : 'failed'}
+                  />
+                </TableCell>
+              </TableRow>
             ))}
           </TableBody>
         </Table>
@@ -317,16 +251,42 @@ export default function TransactionTable() {
   );
 }
 
+// Status indicator component
+const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status }) => {
+  switch (status) {
+    case 'completed':
+      return (
+        <div className='flex items-center text-green-500 font-medium'>
+          <CheckCircle className='mr-2 h-5 w-5' />
+          Completed
+        </div>
+      );
+    case 'pending':
+      return (
+        <div className='flex items-center text-yellow-500 font-medium'>
+          <Clock className='mr-2 h-5 w-5' />
+          Pending
+        </div>
+      );
+    case 'failed':
+      return (
+        <div className='flex items-center text-red-500 font-medium'>
+          <XCircle className='mr-2 h-5 w-5' />
+          Failed
+        </div>
+      );
+    default:
+      return <span>{status}</span>;
+  }
+};
+
 // Skeleton loader for transaction table
 const TransactionTableSkeleton = () => {
   return (
     <div>
       <div className='flex justify-between items-center mb-4'>
         <Skeleton className='h-8 w-48' />
-        <div className='flex gap-4'>
-          <Skeleton className='h-8 w-24' />
-          <Skeleton className='h-8 w-24' />
-        </div>
+        <Skeleton className='h-10 w-24' />
       </div>
 
       <div className='overflow-x-auto rounded-md border border-white/10 overflow-hidden'>
@@ -334,10 +294,10 @@ const TransactionTableSkeleton = () => {
           <TableHeader>
             <TableRow className='border-b border-white/10 bg-secondary'>
               <TableHead className='text-white/10 font-medium'>
-                <Skeleton className='h-4 w-16' />
+                <Skeleton className='h-4 w-24' />
               </TableHead>
               <TableHead className='text-white/10 font-medium'>
-                <Skeleton className='h-4 w-24' />
+                <Skeleton className='h-4 w-20' />
               </TableHead>
               <TableHead className='text-white/10 font-medium'>
                 <Skeleton className='h-4 w-20' />
@@ -362,9 +322,6 @@ const TransactionTableSkeleton = () => {
                   className='border-b border-white/10 hover:bg-secondary bg-black transition-colors'
                 >
                   <TableCell>
-                    <Skeleton className='h-6 w-16' />
-                  </TableCell>
-                  <TableCell>
                     <Skeleton className='h-6 w-32' />
                   </TableCell>
                   <TableCell>
@@ -372,6 +329,9 @@ const TransactionTableSkeleton = () => {
                   </TableCell>
                   <TableCell>
                     <Skeleton className='h-6 w-20' />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className='h-6 w-28' />
                   </TableCell>
                   <TableCell>
                     <Skeleton className='h-6 w-28' />
