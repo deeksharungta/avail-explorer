@@ -16,12 +16,13 @@ interface TransactionResult {
 const fetchTransactionRelatedData = async (
   id: string
 ): Promise<TransactionResult> => {
-  const result = await getTransactionRelatedData(id);
-
-  if (!result) {
-    throw new Error('Data not found');
+  try {
+    const result = await getTransactionRelatedData(id);
+    return result;
+  } catch (error) {
+    console.error(`Error fetching related data for transaction ${id}:`, error);
+    throw error;
   }
-  return result;
 };
 
 // Transaction details hook
@@ -32,6 +33,6 @@ export function useTransactionRelatedData(
     queryKey: ['transaction-related-data', id],
     queryFn: () => fetchTransactionRelatedData(id as string),
     enabled: !!id,
-    retry: 3,
+    retry: 3, // Retry up to 3 times for errors
   });
 }
