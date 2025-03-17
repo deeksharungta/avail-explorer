@@ -21,7 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 import { ActionRecord, useActionsStore } from '@/stores/actionStore';
-import { useWalletStore } from '@/stores/walletStore'; // Assuming you have a wallet store
+import { useWalletStore } from '@/stores/walletStore';
 import {
   TooltipProvider,
   Tooltip,
@@ -210,7 +210,7 @@ export function ActionHistory() {
           <SelectContent className='bg-background text-white border-white/10 '>
             <SelectItem value='all'>All</SelectItem>
             <SelectItem value='transfer'>Transfer</SelectItem>
-            <SelectItem value='data_submit'>Data Submit</SelectItem>
+            <SelectItem value='data-submit'>Data Submit</SelectItem>
           </SelectContent>
         </Select>
       </div>
