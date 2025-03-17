@@ -92,6 +92,7 @@ export interface LogNode {
 export interface LatestTransactionsResponse {
   extrinsics: {
     nodes: {
+      blockId: string;
       module: string;
       call: string;
       timestamp: string;

@@ -26,6 +26,7 @@ export interface Transaction {
   module: string;
   status: 'completed' | 'pending' | 'failed' | string;
   timestamp: string;
+  blockId: string; // Added blockId to the interface
 }
 
 interface StatusIndicatorProps {
@@ -162,6 +163,9 @@ export default function TransactionTable() {
                 MODULE
               </TableHead>
               <TableHead className='text-white/80 font-medium'>
+                BLOCK ID
+              </TableHead>
+              <TableHead className='text-white/80 font-medium'>
                 TIMESTAMP
               </TableHead>
               <TableHead className='text-white/80 font-medium'>
@@ -191,6 +195,9 @@ export default function TransactionTable() {
                 <TableCell className='text-white'>{tx.call || 'N/A'}</TableCell>
                 <TableCell className='text-white'>
                   {tx.module || 'N/A'}
+                </TableCell>
+                <TableCell className='font-mono text-white truncate max-w-24'>
+                  {tx.blockId || 'N/A'}
                 </TableCell>
                 <TableCell className='text-white whitespace-nowrap'>
                   {formatDate(tx.timestamp)}
@@ -296,6 +303,9 @@ const TransactionTableSkeleton = () => {
                 <Skeleton className='h-4 w-20' />
               </TableHead>
               <TableHead className='text-white/10 font-medium'>
+                <Skeleton className='h-4 w-20' />
+              </TableHead>
+              <TableHead className='text-white/10 font-medium'>
                 <Skeleton className='h-4 w-24' />
               </TableHead>
               <TableHead className='text-white/10 font-medium'>
@@ -319,6 +329,9 @@ const TransactionTableSkeleton = () => {
                   </TableCell>
                   <TableCell>
                     <Skeleton className='h-6 w-20' />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className='h-6 w-28' />
                   </TableCell>
                   <TableCell>
                     <Skeleton className='h-6 w-28' />

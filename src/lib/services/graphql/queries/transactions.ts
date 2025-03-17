@@ -43,6 +43,7 @@ export const GET_LATEST_TRANSACTIONS = gql`
       }
     ) {
       nodes {
+        blockId
         module
         call
         timestamp

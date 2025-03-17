@@ -173,6 +173,7 @@ const DUMMY_TRANSACTIONS = {
         .map(() => Math.floor(Math.random() * 16).toString(16))
         .join('')}`,
       success: Math.random() > 0.2,
+      blockId: `${Math.floor(Math.random() * 100000) + 1000000}`,
     })),
 };
 
