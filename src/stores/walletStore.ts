@@ -17,7 +17,7 @@ interface WalletState {
   status: string;
 
   // Actions
-  connectWallet: () => Promise<void>;
+  connectWallet: (showPopup?: boolean) => Promise<boolean>;
   disconnectWallet: () => void;
 }
 
@@ -30,20 +30,45 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   error: null,
   status: 'Disconnected',
 
-  connectWallet: async () => {
+  connectWallet: async (showPopup = true) => {
     set({ isLoading: true, error: null, status: 'Connecting...' });
 
     try {
       const onboard = initOnboard();
-      const wallets = await onboard.connectWallet();
+      const savedWallet = localStorage.getItem('avail-wallet-info');
+      let wallets;
+
+      set({ status: 'Initializing wallet connection...' });
+
+      if (savedWallet) {
+        // If we have a saved wallet, try to connect
+        const { walletName } = JSON.parse(savedWallet);
+        wallets = await onboard.connectWallet({
+          autoSelect: {
+            label: walletName,
+            disableModals: !showPopup,
+            type: 'substrate',
+          },
+        });
+      } else if (showPopup) {
+        // Only show the wallet connect popup if explicitly requested
+        wallets = await onboard.connectWallet();
+      } else {
+        // First-time visitor with no popup requested
+        set({
+          isLoading: false,
+          status: 'Disconnected',
+        });
+        return false;
+      }
 
       if (!wallets || wallets.length === 0) {
         set({
           isLoading: false,
-          error: 'No wallet connected',
-          status: 'Connection failed',
+          error: showPopup ? 'No wallet connected' : null,
+          status: 'Disconnected',
         });
-        return;
+        return false;
       }
 
       const connectedWallet = wallets[0];
@@ -55,17 +80,28 @@ export const useWalletStore = create<WalletState>((set, get) => ({
             'Please connect a Substrate compatible wallet for Avail Network',
           status: 'Connection failed',
         });
-        return;
+        return false;
       }
 
+      set({ status: 'Connecting to Avail network...' });
       // Connect to Avail network
       const { api } = await connectToAvail();
 
-      // Fetch balance
+      // Get the connected account
       const connectedAccount = connectedWallet.accounts[0];
-      const accountBalance = connectedAccount?.address
-        ? await fetchBalance(api, connectedAccount.address)
-        : null;
+
+      if (!connectedAccount?.address) {
+        set({
+          isLoading: false,
+          error: 'No account address found in the connected wallet',
+          status: 'Connection failed',
+        });
+        return false;
+      }
+
+      set({ status: 'Fetching account balance...' });
+      // Fetch balance
+      const accountBalance = await fetchBalance(api, connectedAccount.address);
 
       set({
         wallet: connectedWallet,
@@ -77,10 +113,18 @@ export const useWalletStore = create<WalletState>((set, get) => ({
       });
 
       // Ensure actions are loaded for this account
-      if (connectedAccount?.address) {
-        const { loadWalletActions } = useActionsStore.getState();
-        loadWalletActions(connectedAccount.address);
-      }
+      const { loadWalletActions } = useActionsStore.getState();
+      loadWalletActions(connectedAccount.address);
+
+      localStorage.setItem(
+        'avail-wallet-info',
+        JSON.stringify({
+          walletName: connectedWallet.label,
+          accountAddress: connectedAccount.address,
+        })
+      );
+
+      return true;
     } catch (error) {
       console.error('Error connecting wallet:', error);
       set({
@@ -88,6 +132,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
         error: error instanceof Error ? error.message : String(error),
         status: 'Connection failed',
       });
+      return false;
     }
   },
 
@@ -101,6 +146,9 @@ export const useWalletStore = create<WalletState>((set, get) => ({
     // Clear actions when wallet disconnects
     const { loadWalletActions } = useActionsStore.getState();
     loadWalletActions('');
+
+    // Remove saved wallet info
+    localStorage.removeItem('avail-wallet-info');
 
     set({
       wallet: null,
@@ -120,12 +168,24 @@ export const useWalletInit = () => {
   // Load actions whenever this component mounts and account is available
   useEffect(() => {
     if (account?.address) {
-      // Use a small timeout to ensure this runs after wallet store is updated
-      setTimeout(() => {
-        loadWalletActions(account.address);
-      }, 100);
+      loadWalletActions(account.address);
     }
   }, [account, loadWalletActions]);
+
+  return null;
+};
+
+export const WalletInitializer = () => {
+  const { connectWallet } = useWalletStore();
+
+  useEffect(() => {
+    const initWallet = async () => {
+      // Pass false to prevent showing popups on initial load
+      await connectWallet(false);
+    };
+
+    initWallet();
+  }, [connectWallet]);
 
   return null;
 };

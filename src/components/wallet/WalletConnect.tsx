@@ -21,11 +21,15 @@ export default function WalletConnect() {
     disconnectWallet,
   } = useWalletStore();
 
+  const handleConnect = () => {
+    connectWallet(true);
+  };
+
   return (
     <div className='relative'>
       {!wallet ? (
         <button
-          onClick={connectWallet}
+          onClick={handleConnect}
           disabled={isLoading}
           className='bg-background text-primary hover:bg-muted px-4 py-2 rounded-md font-normal transition-all duration-200 cursor-pointer m-[1px] border-primary border h-12'
         >
