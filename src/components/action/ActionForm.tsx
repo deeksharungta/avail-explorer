@@ -13,9 +13,9 @@ import { Input } from '@/components/ui/input';
 import { useWalletStore } from '@/stores/walletStore';
 import { ActionConfirmModal } from './ActionConfirmModal';
 import WalletConnect from '../wallet/WalletConnect';
-import { AlertCircle } from 'lucide-react';
 import { useActionsStore } from '@/stores/actionStore';
 import { ValidationErrors, validators } from '@/lib/validators/formValidation';
+import { toast } from 'sonner';
 
 type ActionType = 'transfer' | 'data-submit';
 
@@ -41,6 +41,13 @@ export function ActionForm() {
   // Wallet and actions hook
   const { account, balance } = useWalletStore();
   const { transferAvail, submitData, isProcessing, error } = useActionsStore();
+
+  // Display error toast when error state changes
+  useEffect(() => {
+    if (error) {
+      toast.error(formatErrorMessage(error));
+    }
+  }, [error]);
 
   // Get active fields based on action type
   const getActiveFields = (): (keyof FormValues)[] => {
@@ -283,12 +290,12 @@ export function ActionForm() {
           </div>
         )}
 
-        {error && (
+        {/* {error && (
           <div className='w-full mt-2 flex items-center text-red-500 text-sm'>
             <AlertCircle className='h-4 w-4 mr-1' />
             <span>{formatErrorMessage(error)}</span>
           </div>
-        )}
+        )} */}
       </form>
 
       <ActionConfirmModal

@@ -42,8 +42,7 @@ const loadActionsFromStorage = (
     const storedActions = localStorage.getItem(storageKey);
 
     return storedActions ? JSON.parse(storedActions) : [];
-  } catch (error) {
-    console.error('Failed to load actions from localStorage:', error);
+  } catch {
     return [];
   }
 };
@@ -57,9 +56,45 @@ const saveActionsToStorage = (
   try {
     const storageKey = getStorageKey(walletAddress);
     localStorage.setItem(storageKey, JSON.stringify(actions));
-  } catch (error) {
-    console.error('Failed to save actions to localStorage:', error);
+  } catch {}
+};
+
+// Error handling helper function
+export const handleTransactionError = (error: Error | unknown): string => {
+  if (!error) return 'Unknown error occurred';
+
+  const errorMsg = error instanceof Error ? error.message : String(error);
+
+  // User rejection errors
+  if (
+    errorMsg.includes('Rejected by user') ||
+    errorMsg.includes('User rejected') ||
+    errorMsg.includes('User denied') ||
+    errorMsg.includes('Cancelled')
+  ) {
+    return 'Transaction was rejected in wallet';
   }
+
+  // Network errors
+  if (
+    errorMsg.includes('network') ||
+    errorMsg.includes('connection') ||
+    errorMsg.includes('timeout')
+  ) {
+    return 'Network error. Please check your connection and try again';
+  }
+
+  // Insufficient balance
+  if (
+    errorMsg.includes('balance') ||
+    errorMsg.includes('fund') ||
+    errorMsg.includes('insufficient')
+  ) {
+    return 'Insufficient balance for this transaction';
+  }
+
+  // Return the original error if no specific handling
+  return errorMsg;
 };
 
 interface ActionsStore {
@@ -67,14 +102,9 @@ interface ActionsStore {
   error: string | null;
   actions: ActionRecord[];
   currentWalletAddress: string | undefined;
-  transferAvail: (
-    recipient: string,
-    amount: string
-  ) => Promise<ActionRecord | void>;
-  submitData: (data: string) => Promise<ActionRecord | void>;
+  transferAvail: (recipient: string, amount: string) => Promise<void>;
+  submitData: (data: string) => Promise<void>;
   updateActionStatus: (id: string, updates: Partial<ActionRecord>) => void;
-  clearActions: () => void;
-  removeAction: (id: string) => void;
   loadWalletActions: (walletAddress: string) => void;
 }
 
@@ -90,19 +120,29 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
       return;
     }
 
-    const actions = loadActionsFromStorage(walletAddress);
-    set({ actions, currentWalletAddress: walletAddress });
+    try {
+      const actions = loadActionsFromStorage(walletAddress);
+      set({ actions, currentWalletAddress: walletAddress });
+    } catch {
+      // Still set the wallet address even on error
+      set({ actions: [], currentWalletAddress: walletAddress });
+    }
   },
 
   updateActionStatus: (id, updates) => {
     const { currentWalletAddress } = get();
 
     set((state) => {
-      const updatedActions = state.actions.map((action) =>
-        action.id === id ? { ...action, ...updates } : action
-      );
-      saveActionsToStorage(currentWalletAddress, updatedActions);
-      return { actions: updatedActions };
+      try {
+        const updatedActions = state.actions.map((action) =>
+          action.id === id ? { ...action, ...updates } : action
+        );
+        saveActionsToStorage(currentWalletAddress, updatedActions);
+        return { actions: updatedActions };
+      } catch {
+        // Return unchanged state on error
+        return state;
+      }
     });
   },
 
@@ -110,6 +150,17 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
     const { wallet, account, balance } = useWalletStore.getState();
     const { currentWalletAddress, loadWalletActions } = get();
     const address = account?.address;
+
+    // Basic input validation
+    if (!recipient || recipient.trim() === '') {
+      set({ error: 'Recipient address cannot be empty', isProcessing: false });
+      return;
+    }
+
+    if (!amount || amount.trim() === '') {
+      set({ error: 'Amount cannot be empty', isProcessing: false });
+      return;
+    }
 
     // If wallet has changed, load actions for the current wallet
     if (address && address !== currentWalletAddress) {
@@ -122,26 +173,7 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
       const { value: amountBN, success } = convertToSmallestUnit(amount);
 
       if (!success || !amountBN) {
-        const error = 'Invalid amount format';
-        const failedAction: ActionRecord = {
-          id: `action-${Date.now()}`,
-          type: 'transfer',
-          details: { recipient, amount },
-          timestamp: Date.now(),
-          status: 'failed',
-          error,
-          walletAddress: address,
-        };
-
-        set((state) => {
-          const updatedActions = [failedAction, ...state.actions];
-          saveActionsToStorage(address, updatedActions);
-          return {
-            error,
-            actions: updatedActions,
-            currentWalletAddress: address,
-          };
-        });
+        set({ error: 'Invalid amount format', isProcessing: false });
         return;
       }
 
@@ -153,123 +185,41 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
       );
 
       if (Object.keys(validationErrors).length > 0) {
-        const error = JSON.stringify(validationErrors);
-        const failedAction: ActionRecord = {
-          id: `action-${Date.now()}`,
-          type: 'transfer',
-          details: { recipient, amount },
-          timestamp: Date.now(),
-          status: 'failed',
-          error,
-          walletAddress: address,
-        };
-
-        set((state) => {
-          const updatedActions = [failedAction, ...state.actions];
-          saveActionsToStorage(address, updatedActions);
-          return {
-            error,
-            actions: updatedActions,
-            currentWalletAddress: address,
-          };
+        const errorMessage = Object.values(validationErrors).join(', ');
+        set({
+          error: errorMessage,
+          isProcessing: false,
         });
         return;
       }
 
       if (!wallet || !account || !address) {
-        const error = 'Wallet not connected';
-        const failedAction: ActionRecord = {
-          id: `action-${Date.now()}`,
-          type: 'transfer',
-          details: { recipient, amount },
-          timestamp: Date.now(),
-          status: 'failed',
-          error,
-        };
-
-        set((state) => {
-          const updatedActions = [failedAction, ...state.actions];
-          saveActionsToStorage(address, updatedActions);
-          return {
-            error,
-            actions: updatedActions,
-          };
-        });
+        set({ error: 'Wallet not connected', isProcessing: false });
         return;
       }
 
-      // First create a pending action
-      const pendingAction: ActionRecord = {
-        id: `action-${Date.now()}`,
-        type: 'transfer',
-        details: { recipient, amount },
-        timestamp: Date.now(),
-        status: 'pending',
-        walletAddress: address,
-      };
-
-      set((state) => {
-        const updatedActions = [pendingAction, ...state.actions];
-        saveActionsToStorage(address, updatedActions);
-        return {
-          actions: updatedActions,
-          currentWalletAddress: address,
-        };
-      });
-
-      // Start the transaction and immediately update to processing
+      // Perform the transaction and add the transaction to actions
       const result = await performBalanceTransfer(
         account,
         wallet,
         recipient,
         amountBN,
-        pendingAction.id
+        amount
       );
 
-      // First update to processing when transaction starts
-      if (result.status === 'processing') {
-        get().updateActionStatus(pendingAction.id, {
-          status: 'processing',
-          transactionHash: result.txHash,
-        });
-      } else {
-        // Handle immediate success or failure
-        get().updateActionStatus(pendingAction.id, {
-          status: result.status,
-          transactionHash: result.txHash,
-          blockHash: result.blockHash,
-          error:
-            result.error ||
-            (result.status !== 'success' ? 'Transfer failed' : undefined),
+      // Check for transaction errors
+      if (result.status === 'failed') {
+        set({
+          error: result.error || 'Transfer failed',
+          isProcessing: false,
         });
       }
-
-      return pendingAction;
     } catch (err) {
-      const { account } = useWalletStore.getState();
-      const address = account?.address;
-      const error = err instanceof Error ? err.message : 'Transfer failed';
-      const failedAction: ActionRecord = {
-        id: `action-${Date.now()}`,
-        type: 'transfer',
-        details: { recipient, amount },
-        timestamp: Date.now(),
-        status: 'failed',
-        error,
-        walletAddress: address,
-      };
-
-      set((state) => {
-        const updatedActions = [failedAction, ...state.actions];
-        saveActionsToStorage(address, updatedActions);
-        return {
-          error,
-          actions: updatedActions,
-          currentWalletAddress: address,
-        };
+      const errorMessage = handleTransactionError(err);
+      set({
+        error: errorMessage,
+        isProcessing: false,
       });
-
-      return failedAction;
     } finally {
       set({ isProcessing: false });
     }
@@ -279,6 +229,12 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
     const { wallet, account } = useWalletStore.getState();
     const address = account?.address;
     const { currentWalletAddress, loadWalletActions } = get();
+
+    // Basic input validation
+    if (!data || data.trim() === '') {
+      set({ error: 'Data cannot be empty', isProcessing: false });
+      return;
+    }
 
     // If wallet has changed, load actions for the current wallet
     if (address && address !== currentWalletAddress) {
@@ -292,142 +248,38 @@ export const useActionsStore = create<ActionsStore>((set, get) => ({
       const validationErrors = validateDataSubmission(data);
 
       if (Object.keys(validationErrors).length > 0) {
-        const error = JSON.stringify(validationErrors);
-        const failedAction: ActionRecord = {
-          id: `action-${Date.now()}`,
-          type: 'data-submit',
-          details: { data },
-          timestamp: Date.now(),
-          status: 'failed',
-          error,
-          walletAddress: address,
-        };
-
-        set((state) => {
-          const updatedActions = [failedAction, ...state.actions];
-          saveActionsToStorage(address, updatedActions);
-          return {
-            error,
-            actions: updatedActions,
-            currentWalletAddress: address,
-          };
+        const errorMessage = Object.values(validationErrors).join(', ');
+        set({
+          error: errorMessage,
+          isProcessing: false,
         });
-        return failedAction;
+        return;
       }
 
       if (!wallet || !account || !address) {
-        const error = 'Wallet not connected';
-        const failedAction: ActionRecord = {
-          id: `action-${Date.now()}`,
-          type: 'data-submit',
-          details: { data },
-          timestamp: Date.now(),
-          status: 'failed',
-          error,
-        };
-
-        set((state) => {
-          const updatedActions = [failedAction, ...state.actions];
-          saveActionsToStorage(address, updatedActions);
-          return {
-            error,
-            actions: updatedActions,
-          };
-        });
-        return failedAction;
+        set({ error: 'Wallet not connected', isProcessing: false });
+        return;
       }
 
-      // First create a pending action
-      const pendingAction: ActionRecord = {
-        id: `action-${Date.now()}`,
-        type: 'data-submit',
-        details: { data },
-        timestamp: Date.now(),
-        status: 'pending',
-        walletAddress: address,
-      };
+      // Post data and add the transaction to actions
+      const result = await postData(account, wallet, data);
 
-      set((state) => {
-        const updatedActions = [pendingAction, ...state.actions];
-        saveActionsToStorage(address, updatedActions);
-        return {
-          actions: updatedActions,
-          currentWalletAddress: address,
-        };
-      });
-
-      // Start the transaction
-      const result = await postData(account, wallet, data, pendingAction.id);
-
-      // First update to processing when transaction starts
-      if (result.status === 'processing') {
-        get().updateActionStatus(pendingAction.id, {
-          status: 'processing',
-          transactionHash: result.txHash,
-        });
-      } else {
-        // Handle immediate success or failure
-        get().updateActionStatus(pendingAction.id, {
-          status: result.status,
-          transactionHash: result.txHash,
-          blockHash: result.blockHash,
-          error:
-            result.error ||
-            (result.status !== 'success'
-              ? 'Data submission failed'
-              : undefined),
+      // Check for transaction errors
+      if (result.status === 'failed') {
+        set({
+          error: result.error || 'Data submission failed',
+          isProcessing: false,
         });
       }
-
-      return pendingAction;
     } catch (err) {
-      const { account } = useWalletStore.getState();
-      const address = account?.address;
-      const error =
-        err instanceof Error ? err.message : 'Data submission failed';
-      const failedAction: ActionRecord = {
-        id: `action-${Date.now()}`,
-        type: 'data-submit',
-        details: { data },
-        timestamp: Date.now(),
-        status: 'failed',
-        error,
-        walletAddress: address,
-      };
-
-      set((state) => {
-        const updatedActions = [failedAction, ...state.actions];
-        saveActionsToStorage(address, updatedActions);
-        return {
-          error,
-          actions: updatedActions,
-          currentWalletAddress: address,
-        };
+      const errorMessage = handleTransactionError(err);
+      set({
+        error: errorMessage,
+        isProcessing: false,
       });
-
-      return failedAction;
     } finally {
       set({ isProcessing: false });
     }
-  },
-
-  clearActions: () => {
-    const { currentWalletAddress } = get();
-
-    if (currentWalletAddress) {
-      saveActionsToStorage(currentWalletAddress, []);
-      set({ actions: [] });
-    }
-  },
-
-  removeAction: (id) => {
-    const { currentWalletAddress } = get();
-
-    set((state) => {
-      const updatedActions = state.actions.filter((action) => action.id !== id);
-      saveActionsToStorage(currentWalletAddress, updatedActions);
-      return { actions: updatedActions };
-    });
   },
 }));
 
