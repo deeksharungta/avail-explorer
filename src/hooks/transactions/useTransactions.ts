@@ -73,6 +73,7 @@ export function useTransactions(
     staleTime: 30000, // 30 seconds
     refetchInterval:
       backgroundSyncConfig.interval || DEFAULT_SYNC_CONFIG.interval,
+    enabled: hashesToFetch.length > 0, // Only run the query if there are hashes to fetch
   });
 
   // Find local transactions
@@ -132,7 +133,7 @@ export function useTransactions(
         if (matchingAction) {
           const newStatus = tx.success ? 'success' : 'failed';
 
-          // Only update if status has changed
+          // Only update if status has changed and is still in a pending state
           if (
             matchingAction.status !== newStatus &&
             (matchingAction.status === 'pending' ||
@@ -171,25 +172,16 @@ export function useTransactions(
         apiQuery.data?.find((tx) => tx.txHash === hash) || null;
       const localTransaction = localTransactions[hash];
 
-      // Determine status with a more readable approach
-      let status: string;
+      // Only update status if the local transaction is still pending/processing
+      let status = localTransaction?.status || 'pending';
 
-      if (localTransaction) {
-        if (
-          localTransaction.status === 'pending' ||
-          localTransaction.status === 'processing'
-        ) {
-          status =
-            apiTransaction?.success !== undefined
-              ? apiTransaction.success
-                ? 'success'
-                : 'failed'
-              : localTransaction.status;
-        } else {
-          status = localTransaction.status;
-        }
-      } else {
-        status = apiTransaction?.success ? 'success' : 'failed';
+      if (
+        localTransaction &&
+        (localTransaction.status === 'pending' ||
+          localTransaction.status === 'processing') &&
+        apiTransaction?.success !== undefined
+      ) {
+        status = apiTransaction.success ? 'success' : 'failed';
       }
 
       return {

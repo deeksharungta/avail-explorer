@@ -50,6 +50,9 @@ export function ActionHistory() {
   const [filterType, setFilterType] = useState('all');
   const rowsPerPage = 10;
 
+  // Load action statuses from localStorage on component mount
+  const [statusUpdated, setStatusUpdated] = useState(false);
+
   // Extract transaction hashes from actions
   const transactionHashes = useMemo(
     () =>
@@ -63,10 +66,14 @@ export function ActionHistory() {
   const { data: transactionData, isLoading: isLoadingTransactions } =
     useTransactions(transactionHashes);
 
+  // Track which transactions have been updated to prevent status flicker
+  const [updatedTransactions] = useState(new Set());
+
   // Combine actions with API data
   const enhancedActions = useMemo(
     () =>
       actions.map((action) => {
+        // If no transaction hash, return original action
         if (!action.transactionHash || !transactionData) {
           return action;
         }
@@ -74,27 +81,81 @@ export function ActionHistory() {
         const txData = transactionData.find(
           (tx) => tx.hash === action.transactionHash
         );
+
+        // No API data available
         if (!txData) {
           return action;
         }
 
-        // Update action status if needed
-        let status = action.status;
+        // If this transaction was already updated to success/failed,
+        // or if the action is already in a final state, don't change the status
         if (
-          (status === 'pending' || status === 'processing') &&
+          updatedTransactions.has(action.transactionHash) ||
+          action.status === 'success' ||
+          action.status === 'failed'
+        ) {
+          return {
+            ...action,
+            apiData: txData.apiData,
+          };
+        }
+        let newStatus: 'pending' | 'processing' | 'success' | 'failed' =
+          action.status;
+        // Only update status if transaction is still pending/processing
+        if (
+          (action.status === 'pending' || action.status === 'processing') &&
           txData.apiData
         ) {
-          status = txData.apiData.success ? 'success' : 'failed';
+          const updatedStatus = txData.apiData.success ? 'success' : 'failed';
+          updatedTransactions.add(action.transactionHash);
+          newStatus = updatedStatus;
         }
 
         return {
           ...action,
-          status,
+          status: newStatus,
           apiData: txData.apiData,
         };
       }),
-    [actions, transactionData]
+    [actions, transactionData, updatedTransactions]
   );
+
+  // Update action store when transaction status changes
+  useEffect(() => {
+    if (statusUpdated || isLoadingTransactions) return;
+
+    const updateActionStatus = useActionsStore.getState().updateActionStatus;
+    let hasUpdates = false;
+
+    enhancedActions.forEach((action) => {
+      const originalAction = actions.find((a) => a.id === action.id);
+
+      if (
+        originalAction &&
+        originalAction.status !== action.status &&
+        (originalAction.status === 'pending' ||
+          originalAction.status === 'processing')
+      ) {
+        updateActionStatus(action.id, {
+          status: action.status,
+          transactionHash: action.transactionHash,
+        });
+
+        hasUpdates = true;
+      }
+    });
+
+    if (hasUpdates) {
+      setStatusUpdated(true);
+    }
+  }, [enhancedActions, actions, statusUpdated, isLoadingTransactions]);
+
+  // Reset status updated flag when transaction data changes
+  useEffect(() => {
+    if (!isLoadingTransactions && statusUpdated) {
+      setStatusUpdated(false);
+    }
+  }, [transactionData, isLoadingTransactions, statusUpdated]);
 
   // Filter actions based on type
   const filteredActions = useMemo(
