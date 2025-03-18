@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@radix-ui/react-tooltip';
+import { Loader2 } from 'lucide-react';
 
 interface ActionConfirmModalProps {
   isOpen: boolean;
@@ -46,12 +47,17 @@ export function ActionConfirmModal({
   actionType,
   details,
 }: ActionConfirmModalProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const handleConfirm = async () => {
     try {
+      setIsProcessing(true);
       await onConfirm();
+      setIsProcessing(false);
       onClose();
     } catch (err) {
       console.error(err);
+      setIsProcessing(false);
       onClose();
     }
   };
@@ -98,7 +104,7 @@ export function ActionConfirmModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={() => !isProcessing && onClose()}>
       <DialogContent className='dark:text-white sm:max-w-md border-white/10'>
         <DialogHeader>
           <DialogTitle className='text-xl text-white'>
@@ -115,15 +121,24 @@ export function ActionConfirmModal({
           <div className='flex gap-3 w-full'>
             <Button
               onClick={onClose}
-              className='flex-1 cursor-pointer bg-secondary hover:bg-white/10'
+              disabled={isProcessing}
+              className='flex-1 cursor-pointer bg-secondary hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed'
             >
               Cancel
             </Button>
             <Button
               onClick={handleConfirm}
-              className='flex-1 bg-white text-black cursor-pointer hover:bg-white/80 hover:text-black'
+              disabled={isProcessing}
+              className='flex-1 bg-white text-black cursor-pointer hover:bg-white/80 hover:text-black disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              Confirm
+              {isProcessing ? (
+                <div className='flex items-center justify-center'>
+                  <Loader2 className='animate-spin mr-2 h-4 w-4 text-black' />
+                  Processing...
+                </div>
+              ) : (
+                'Confirm'
+              )}
             </Button>
           </div>
         </DialogFooter>
