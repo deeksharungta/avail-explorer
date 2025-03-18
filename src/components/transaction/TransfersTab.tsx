@@ -27,7 +27,7 @@ export default function TransfersTab({ transfers }: TransferTabProps) {
                   <Send className='h-5 w-5 text-green-400 flex-shrink-0' />
                   <div>
                     <p className='text-sm text-white/60'>From</p>
-                    <p className='text-sm font-mono break-all'>
+                    <p className='text-sm font-mono break-all text-white'>
                       {transfer.from}
                     </p>
                   </div>
@@ -35,15 +35,17 @@ export default function TransfersTab({ transfers }: TransferTabProps) {
                 <div className='flex items-center space-x-3'>
                   <Download className='h-5 w-5 text-blue-400 flex-shrink-0' />
                   <div>
-                    <p className='text-sm text-white/60'>To</p>
-                    <p className='text-sm font-mono break-all'>{transfer.to}</p>
+                    <p className='text-sm text-white/60 '>To</p>
+                    <p className='text-sm font-mono break-all text-white'>
+                      {transfer.to}
+                    </p>
                   </div>
                 </div>
                 <div className='flex items-center space-x-3'>
                   <ArrowRightLeft className='h-5 w-5 text-purple-400 flex-shrink-0' />
                   <div>
                     <p className='text-sm text-white/60'>Amount</p>
-                    <p className='text-sm font-medium'>
+                    <p className='text-sm font-medium text-white'>
                       {transfer.amount} {transfer.currency}
                     </p>
                   </div>
@@ -52,7 +54,9 @@ export default function TransfersTab({ transfers }: TransferTabProps) {
                   <Clock className='h-5 w-5 text-orange-400 flex-shrink-0' />
                   <div>
                     <p className='text-sm text-white/60'>Time</p>
-                    <p className='text-sm'>{formatDate(transfer.timestamp)}</p>
+                    <p className='text-sm text-white'>
+                      {formatDate(transfer.timestamp)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -62,7 +66,7 @@ export default function TransfersTab({ transfers }: TransferTabProps) {
         {transfers.length === 0 && (
           <div className='text-center text-white/60 py-8 flex flex-col items-center'>
             <ArrowRightLeft className='h-12 w-12 text-blue-400 mb-4' />
-            <p>No transfers found</p>
+            <p className='text-white'>No transfers found</p>
           </div>
         )}
       </CardContent>
