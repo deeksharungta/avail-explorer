@@ -3,11 +3,13 @@ import {
   GET_LATEST_TRANSACTIONS,
   GET_TRANSACTION_BY_HASH,
   GET_TRANSACTION_RELATED_DATA,
+  GET_TRANSACTIONS_BY_HASHES,
 } from '@/lib/services/graphql/queries/transactions';
 import {
   ExtrinsicResponse,
   ExtrinsicRelatedDataResponse,
   LatestTransactionsResponse,
+  ExtrinsicBasicInfoResponse,
 } from '@/types/graphql';
 
 interface GetTransactionsParams {
@@ -56,6 +58,31 @@ export async function getTransactionByHash(hash: string) {
     return null;
   } catch (error) {
     console.error(`Error fetching transaction ${hash}:`, error);
+    throw new Error('Failed to fetch transaction details');
+  }
+}
+
+// Fetch multiple transactions by their hashes
+export async function getTransactionsByHashes(hashes: string[]) {
+  try {
+    const data = await graphqlClient.request<ExtrinsicBasicInfoResponse>(
+      GET_TRANSACTIONS_BY_HASHES,
+      { hashes }
+    );
+
+    // Return all transaction nodes
+    if (
+      data.extrinsics &&
+      data.extrinsics.nodes &&
+      data.extrinsics.nodes.length > 0
+    ) {
+      return data.extrinsics.nodes;
+    }
+
+    // No transactions found
+    return [];
+  } catch (error) {
+    console.error(`Error fetching transactions:`, error);
     throw new Error('Failed to fetch transaction details');
   }
 }

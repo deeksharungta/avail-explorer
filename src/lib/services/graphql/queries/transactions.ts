@@ -83,6 +83,22 @@ export const GET_TRANSACTION_BY_HASH = gql`
   }
 `;
 
+// Get multiple transactions by hashes with detailed information
+export const GET_TRANSACTIONS_BY_HASHES = gql`
+  query GetTransactionsByHashes($hashes: [String!]!) {
+    extrinsics(filter: { hash: { in: $hashes } }) {
+      nodes {
+        txHash
+        success
+        timestamp
+        argsValue
+        module
+        call
+      }
+    }
+  }
+`;
+
 // Get related data using the extrinsic ID retrieved from the first query
 export const GET_TRANSACTION_RELATED_DATA = gql`
   query GetTransactionRelatedData($extrinsicId: String!) {

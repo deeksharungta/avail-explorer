@@ -115,6 +115,20 @@ export interface ExtrinsicRelatedDataResponse {
   };
 }
 
+export interface ExtrinsicBasicInfo {
+  txHash: string;
+  success: boolean;
+  timestamp: string;
+  argsValue: string;
+  call: string;
+}
+
+export interface ExtrinsicBasicInfoResponse {
+  extrinsics: {
+    nodes: ExtrinsicBasicInfo[];
+  };
+}
+
 // Extended extrinsic with relations
 export interface ExtrinsicWithRelations extends Extrinsic {
   block: {

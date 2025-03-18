@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -37,18 +37,73 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { useTransactions } from '@/hooks/transactions/useTransactions';
+import { ExtrinsicBasicInfo } from '@/types/graphql';
+
+type ActionWithApiData = ActionRecord & { apiData?: ExtrinsicBasicInfo };
 
 export function ActionHistory() {
   const { actions } = useActionsStore();
   const { account } = useWalletStore();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterType, setFilterType] = useState('all');
   const rowsPerPage = 10;
 
-  const filteredActions =
-    filterType === 'all'
-      ? actions
-      : actions.filter((action) => action.type === filterType);
+  // Extract transaction hashes from actions
+  const transactionHashes = useMemo(
+    () =>
+      actions
+        .filter((action) => Boolean(action.transactionHash))
+        .map((action) => action.transactionHash as string),
+    [actions]
+  );
+
+  // Fetch transaction data from API
+  const { data: transactionData, isLoading: isLoadingTransactions } =
+    useTransactions(transactionHashes);
+
+  // Combine actions with API data
+  const enhancedActions = useMemo(
+    () =>
+      actions.map((action) => {
+        if (!action.transactionHash || !transactionData) {
+          return action;
+        }
+
+        const txData = transactionData.find(
+          (tx) => tx.hash === action.transactionHash
+        );
+        if (!txData) {
+          return action;
+        }
+
+        // Update action status if needed
+        let status = action.status;
+        if (
+          (status === 'pending' || status === 'processing') &&
+          txData.apiData
+        ) {
+          status = txData.apiData.success ? 'success' : 'failed';
+        }
+
+        return {
+          ...action,
+          status,
+          apiData: txData.apiData,
+        };
+      }),
+    [actions, transactionData]
+  );
+
+  // Filter actions based on type
+  const filteredActions = useMemo(
+    () =>
+      filterType === 'all'
+        ? enhancedActions
+        : enhancedActions.filter((action) => action.type === filterType),
+    [enhancedActions, filterType]
+  );
 
   const paginatedActions = filteredActions.slice(
     (currentPage - 1) * rowsPerPage,
@@ -62,6 +117,13 @@ export function ActionHistory() {
     if (!str) return '';
     return str.length > length ? `${str.slice(0, 6)}...${str.slice(-4)}` : str;
   };
+
+  // Update initial load state when transactions finish loading
+  useEffect(() => {
+    if (!isLoadingTransactions && isInitialLoad) {
+      setIsInitialLoad(false);
+    }
+  }, [isLoadingTransactions, isInitialLoad]);
 
   // Render transaction type with badge
   const renderTypeWithBadge = (type: string) => {
@@ -130,7 +192,7 @@ export function ActionHistory() {
   };
 
   // Render value based on action type
-  const renderValue = (action: ActionRecord) => {
+  const renderValue = (action: ActionWithApiData) => {
     if (action.type === 'transfer') {
       return (
         <div>
@@ -228,7 +290,16 @@ export function ActionHistory() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedActions.length === 0 ? (
+            {isLoadingTransactions && isInitialLoad ? (
+              <TableRow className='border-b border-white/10 hover:bg-transparent py-6'>
+                <TableCell colSpan={5} className='text-center text-white/80'>
+                  <div className='flex justify-center items-center py-4'>
+                    <Loader2 className='h-6 w-6 animate-spin mr-2 text-white/50' />
+                    <span>Loading transaction data...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : paginatedActions.length === 0 ? (
               <TableRow className='border-b border-white/10 hover:bg-transparent py-6'>
                 <TableCell colSpan={5} className='text-center text-white/80 '>
                   No recent actions
@@ -253,7 +324,9 @@ export function ActionHistory() {
                 >
                   <TableCell>{renderID(action)}</TableCell>
                   <TableCell>{renderTypeWithBadge(action.type)}</TableCell>
-                  <TableCell>{renderValue(action)}</TableCell>
+                  <TableCell>
+                    {renderValue(action as ActionWithApiData)}
+                  </TableCell>
                   <TableCell className='text-white'>
                     {formatTimestamp(action.timestamp)}
                   </TableCell>
