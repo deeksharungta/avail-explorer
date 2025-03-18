@@ -179,9 +179,8 @@ export default function TransactionTable() {
                 onClick={
                   tx.txHash
                     ? () => {
-                        window.open(
-                          getTransactionLink(tx.txHash || ''),
-                          '_blank'
+                        window.location.href = getTransactionLink(
+                          tx.txHash || ''
                         );
                       }
                     : undefined

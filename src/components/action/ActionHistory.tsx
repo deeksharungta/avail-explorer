@@ -244,9 +244,8 @@ export function ActionHistory() {
                   onClick={
                     action.transactionHash
                       ? () => {
-                          window.open(
-                            getTransactionLink(action.transactionHash || ''),
-                            '_blank'
+                          window.location.href = getTransactionLink(
+                            action.transactionHash || ''
                           );
                         }
                       : undefined

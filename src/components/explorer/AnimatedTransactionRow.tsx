@@ -40,7 +40,7 @@ const AnimatedTransactionRow: React.FC<AnimatedTransactionRowProps> = ({
       onClick={
         tx.txHash
           ? () => {
-              window.open(getTransactionLink(tx.txHash || ''), '_blank');
+              window.location.href = getTransactionLink(tx.txHash || '');
             }
           : undefined
       }
